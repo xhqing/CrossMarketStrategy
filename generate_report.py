@@ -18,7 +18,6 @@ filepath = os.path.join(OUTPUT_DIR, filename)
 
 df_index = pd.read_csv(os.path.join(OUTPUT_DIR, 'index_data.csv'))
 df_stock = pd.read_csv(os.path.join(OUTPUT_DIR, 'stock_data.csv'))
-df_cbbc = pd.read_csv(os.path.join(OUTPUT_DIR, 'cbbc_stock_data.csv'))
 
 index_price_map = {}
 for _, row in df_index.iterrows():
@@ -31,13 +30,6 @@ stock_price_map = {}
 for _, row in df_stock.iterrows():
     try:
         stock_price_map[row['股票代码']] = float(row['当前最新价格(HKD)'])
-    except (ValueError, TypeError):
-        pass
-
-cbbc_price_map = {}
-for _, row in df_cbbc.iterrows():
-    try:
-        cbbc_price_map[row['股票代码']] = float(row['当前最新价格(HKD)'])
     except (ValueError, TypeError):
         pass
 
@@ -126,52 +118,8 @@ stock_analysis = [
      "events": "海外市场拓展加速，智能驾驶技术突破", "logic": "新能源车全球销量龙头，海外放量打开第二增长曲线，智能化升级提升产品力。"},
 ]
 
-cbbc_stock_analysis = [
-    {"name": "新鸿基地产", "code": "00016.HK", "price": cbbc_price_map.get("00016.HK", 137.60), "trend": "震荡偏弱", "high": 160, "low": 115, "advice": "观望", "position": "平仓",
-     "events": "香港楼市成交回暖但价格承压，利率维持高位增加融资成本", "logic": "高利率环境压制地产估值，楼市复苏力度不及预期，短期缺乏催化。"},
-    {"name": "恒基地产", "code": "00012.HK", "price": cbbc_price_map.get("00012.HK", 30.44), "trend": "震荡偏弱", "high": 36, "low": 25, "advice": "观望", "position": "平仓",
-     "events": "农地转换进展缓慢，楼市去化压力仍存", "logic": "地产板块整体承压，利率高位增加持有成本，需等待楼市政策进一步放松。"},
-    {"name": "新世界发展", "code": "00017.HK", "price": cbbc_price_map.get("00017.HK", 8.73), "trend": "震荡下行", "high": 10.5, "low": 6.5, "advice": "做空", "position": "根据当前预设，做空无仓位调整建议",
-     "events": "债务压力较大，出售资产回笼资金", "logic": "财务杠杆过高，降杠杆过程压制估值，地产业务恢复缓慢。"},
-    {"name": "长实集团", "code": "01113.HK", "price": cbbc_price_map.get("01113.HK", 48.28), "trend": "震荡偏弱", "high": 56, "low": 40, "advice": "观望", "position": "平仓",
-     "events": "飞机租赁业务稳健，地产销售承压", "logic": "多元化业务提供一定防御，但地产核心业务仍受高利率压制。"},
-    {"name": "香港交易所", "code": "00388.HK", "price": cbbc_price_map.get("00388.HK", 416.40), "trend": "震荡偏强", "high": 480, "low": 360, "advice": "做多", "position": "持有",
-     "events": "港股成交额回升，IPO市场回暖", "logic": "市场活跃度提升直接受益，IPO市场回暖，垄断地位不可替代。"},
-    {"name": "友邦保险", "code": "01299.HK", "price": cbbc_price_map.get("01299.HK", 83.15), "trend": "震荡偏强", "high": 98, "low": 70, "advice": "做多", "position": "持有",
-     "events": "新业务价值增长稳健，内地访客需求强劲", "logic": "亚太寿险龙头地位稳固，利率高位利好投资收益，估值处于合理区间。"},
-    {"name": "中国人寿", "code": "02628.HK", "price": cbbc_price_map.get("02628.HK", 27.34), "trend": "震荡偏强", "high": 34, "low": 22, "advice": "做多", "position": "持有",
-     "events": "保费收入增长，投资收益改善", "logic": "寿险行业景气度回升，权益市场回暖利好投资端，估值修复空间较大。"},
-    {"name": "中国平安", "code": "02318.HK", "price": cbbc_price_map.get("02318.HK", 61.30), "trend": "震荡偏强", "high": 75, "low": 50, "advice": "做多", "position": "持有",
-     "events": "综合金融生态协同增强，科技赋能降本增效", "logic": "金融+科技双轮驱动，寿险改革成效显现，估值处于历史低位。"},
-    {"name": "中国移动", "code": "00941.HK", "price": cbbc_price_map.get("00941.HK", 83.45), "trend": "震荡偏强", "high": 95, "low": 70, "advice": "做多", "position": "持有",
-     "events": "5G用户渗透率提升，算力网络建设加速", "logic": "高股息+稳增长特征突出，AI算力需求拉动云业务增长。"},
-    {"name": "中国联通", "code": "00762.HK", "price": cbbc_price_map.get("00762.HK", 7.27), "trend": "震荡偏强", "high": 8.8, "low": 6.2, "advice": "做多", "position": "持有",
-     "events": "产业互联网收入占比提升，大数据业务增长", "logic": "数字化转型加速，产业互联网打开增长空间，估值偏低具备安全边际。"},
-    {"name": "中国电信", "code": "00728.HK", "price": cbbc_price_map.get("00728.HK", 5.05), "trend": "震荡偏强", "high": 6.0, "low": 4.2, "advice": "做多", "position": "持有",
-     "events": "天翼云收入高速增长，AI大模型落地应用", "logic": "云业务增速行业领先，AI+通信融合催化，高股息率具备配置吸引力。"},
-    {"name": "网易", "code": "09999.HK", "price": cbbc_price_map.get("09999.HK", 177.80), "trend": "震荡偏弱", "high": 220, "low": 155, "advice": "做多", "position": "持有",
-     "events": "新游戏上线表现优异，AI赋能游戏研发提效", "logic": "游戏管线丰富，AI降本增效逻辑清晰，但科网股整体回调短期承压。"},
-    {"name": "百度集团", "code": "09888.HK", "price": cbbc_price_map.get("09888.HK", 121.20), "trend": "震荡偏弱", "high": 155, "low": 100, "advice": "观望", "position": "平仓",
-     "events": "文心大模型持续迭代，但变现路径不明确，自动驾驶商业化缓慢", "logic": "AI概念催化减弱，核心搜索广告业务面临字节跳动竞争。"},
-    {"name": "哔哩哔哩", "code": "09626.HK", "price": cbbc_price_map.get("09626.HK", 177.80), "trend": "震荡偏弱", "high": 240, "low": 160, "advice": "观望", "position": "平仓",
-     "events": "广告和增值服务收入增长，但盈利持续性待验证", "logic": "社区生态变现效率提升，但估值偏高需业绩持续验证。"},
-    {"name": "蔚来", "code": "09866.HK", "price": cbbc_price_map.get("09866.HK", 51.70), "trend": "震荡偏弱", "high": 65, "low": 38, "advice": "观望", "position": "平仓",
-     "events": "换电网络扩张，但交付量增长放缓", "logic": "换电模式差异化但资本开支大，销量增速落后竞品，盈利时点不确定。"},
-    {"name": "理想汽车", "code": "02015.HK", "price": cbbc_price_map.get("02015.HK", 73.55), "trend": "震荡偏弱", "high": 92, "low": 58, "advice": "做多", "position": "持有",
-     "events": "纯电车型上市，智驾技术迭代", "logic": "产品矩阵完善，家庭用车定位精准，但纯电转型效果待验证。"},
-    {"name": "小鹏汽车", "code": "09868.HK", "price": cbbc_price_map.get("09868.HK", 66.60), "trend": "震荡偏弱", "high": 88, "low": 52, "advice": "观望", "position": "平仓",
-     "events": "MONA系列销量超预期，但毛利率仍为负", "logic": "智驾技术领先但变现困难，规模效应尚未体现，盈利遥遥无期。"},
-    {"name": "海尔智家", "code": "06690.HK", "price": cbbc_price_map.get("06690.HK", 21.20), "trend": "震荡偏强", "high": 26, "low": 18, "advice": "做多", "position": "持有",
-     "events": "海外市场盈利改善，高端品牌卡萨帝增长", "logic": "全球化布局成效显现，高端化战略提升盈利能力，估值合理。"},
-    {"name": "李宁", "code": "02331.HK", "price": cbbc_price_map.get("02331.HK", 20.50), "trend": "震荡偏弱", "high": 26, "low": 16, "advice": "观望", "position": "平仓",
-     "events": "国潮热度退减，库存去化进行中", "logic": "运动服饰竞争加剧，品牌力边际减弱，需等待渠道改革和产品创新见效。"},
-    {"name": "安踏体育", "code": "02020.HK", "price": cbbc_price_map.get("02020.HK", 84.95), "trend": "震荡偏强", "high": 105, "low": 70, "advice": "做多", "position": "持有",
-     "events": "亚玛芬体育整合顺利，多品牌战略成效显著", "logic": "多品牌矩阵覆盖各细分市场，全球化进程加速，经营效率行业领先。"},
-]
-
 index_table_csv = df_index.to_html(index=False, classes="data-table", border=0, escape=False)
 stock_table_csv = df_stock.to_html(index=False, classes="data-table", border=0, escape=False)
-cbbc_table_csv = df_cbbc.to_html(index=False, classes="data-table", border=0, escape=False)
 
 def make_index_row(ia):
     high_rise = calc_rise(ia["current"], ia["high"])
@@ -196,7 +144,6 @@ def make_stock_row(sa):
 
 index_rows = "".join(make_index_row(ia) for ia in index_analysis)
 stock_rows = "".join(make_stock_row(sa) for sa in stock_analysis)
-cbbc_rows = "".join(make_stock_row(ca) for ca in cbbc_stock_analysis)
 
 html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -263,8 +210,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 <li><a href="#section1">一、市场数据</a>
 <ul class="sub">
 <li><a href="#section1-1">1.1 指数数据表</a></li>
-<li><a href="#section1-2">1.2 指定个股数据表</a></li>
-<li><a href="#section1-3">1.3 拥有可交易牛熊证的额外港股个股数据表</a></li>
+<li><a href="#section1-2">1.2 个股数据表</a></li>
 </ul>
 </li>
 <li><a href="#section2">二、重大事件分析</a>
@@ -275,12 +221,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 </ul>
 </li>
 <li><a href="#section3">三、指数研判</a></li>
-<li><a href="#section4">四、个股分析</a>
-<ul class="sub">
-<li><a href="#section4-1">4.1 指定个股分析</a></li>
-<li><a href="#section4-2">4.2 当前存在可交易牛熊证的个股分析</a></li>
-</ul>
-</li>
+<li><a href="#section4">四、个股分析</a></li>
 <li><a href="#section5">五、分析推理过程</a></li>
 <li><a href="#section6">六、参考资料</a></li>
 </ul>
@@ -292,11 +233,8 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 <h3 id="section1-1">1.1 指数数据表</h3>
 {index_table_csv}
 
-<h3 id="section1-2">1.2 指定个股数据表</h3>
+<h3 id="section1-2">1.2 个股数据表</h3>
 {stock_table_csv}
-
-<h3 id="section1-3">1.3 拥有可交易牛熊证的额外港股个股数据表</h3>
-{cbbc_table_csv}
 </div>
 
 <div class="section" id="section2">
@@ -450,14 +388,11 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 <div class="section" id="section4">
 <h2>四、个股分析</h2>
 
-<h3 id="section4-1">4.1 指定个股分析</h3>
-
 <table class="data-table">
 <thead>
 <tr>
 <th>股票名称</th><th>股票代码</th><th>当前最新价格(HKD)</th>
-<th>未来一个月趋势预判</th>
-<th>截止2026年12月31日最高目标价</th><th>最高目标价相对最新价格涨幅</th>
+<th>未来一个月趋势预判</th><th>截止2026年12月31日最高目标价</th><th>最高目标价相对最新价格涨幅</th>
 <th>截止2026年12月31日最低目标价</th><th>最低目标价相对最新价格跌幅</th>
 <th>当前做多做空建议</th><th>当前仓位调整建议</th>
 <th>近期个股自身重大事件</th><th>未来一个月趋势预判的核心逻辑</th>
@@ -465,24 +400,6 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 </thead>
 <tbody>
 {stock_rows}
-</tbody>
-</table>
-
-<h3 id="section4-2">4.2 当前存在可交易牛熊证的个股分析</h3>
-
-<table class="data-table">
-<thead>
-<tr>
-<th>股票名称</th><th>股票代码</th><th>当前最新价格(HKD)</th>
-<th>未来一个月趋势预判</th>
-<th>截止2026年12月31日最高目标价</th><th>最高目标价相对最新价格涨幅</th>
-<th>截止2026年12月31日最低目标价</th><th>最低目标价相对最新价格跌幅</th>
-<th>当前做多做空建议</th><th>当前仓位调整建议</th>
-<th>近期个股自身重大事件</th><th>未来一个月趋势预判的核心逻辑</th>
-</tr>
-</thead>
-<tbody>
-{cbbc_rows}
 </tbody>
 </table>
 </div>

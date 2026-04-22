@@ -61,6 +61,15 @@ def get_indices_from_config(config):
                 "lp_code": idx['code']
             })
 
+    us_shares = config.get('us_shares', {})
+    for idx in us_shares.get('index_major', []):
+        if idx.get('name') and idx.get('code'):
+            indices.append({
+                "指数名称": idx['name'],
+                "指数代码": idx['code'],
+                "lp_code": idx['code']
+            })
+
     return indices
 
 
@@ -191,44 +200,12 @@ def format_timestamp(ts, is_us_index=False):
         return str(ts)
 
 
-CBBC_STOCKS = [
-    {"股票名称": "新鸿基地产", "股票代码": "00016.HK", "lp_code": "00016.HK"},
-    {"股票名称": "恒基地产", "股票代码": "00012.HK", "lp_code": "00012.HK"},
-    {"股票名称": "新世界发展", "股票代码": "00017.HK", "lp_code": "00017.HK"},
-    {"股票名称": "长实集团", "股票代码": "01113.HK", "lp_code": "01113.HK"},
-    {"股票名称": "香港交易所", "股票代码": "00388.HK", "lp_code": "00388.HK"},
-    {"股票名称": "友邦保险", "股票代码": "01299.HK", "lp_code": "01299.HK"},
-    {"股票名称": "中国人寿", "股票代码": "02628.HK", "lp_code": "02628.HK"},
-    {"股票名称": "中国平安", "股票代码": "02318.HK", "lp_code": "02318.HK"},
-    {"股票名称": "中国移动", "股票代码": "00941.HK", "lp_code": "00941.HK"},
-    {"股票名称": "中国联通", "股票代码": "00762.HK", "lp_code": "00762.HK"},
-    {"股票名称": "中国电信", "股票代码": "00728.HK", "lp_code": "00728.HK"},
-    {"股票名称": "网易", "股票代码": "09999.HK", "lp_code": "09999.HK"},
-    {"股票名称": "百度集团", "股票代码": "09888.HK", "lp_code": "09888.HK"},
-    {"股票名称": "哔哩哔哩", "股票代码": "09626.HK", "lp_code": "09626.HK"},
-    {"股票名称": "蔚来", "股票代码": "09866.HK", "lp_code": "09866.HK"},
-    {"股票名称": "理想汽车", "股票代码": "02015.HK", "lp_code": "02015.HK"},
-    {"股票名称": "小鹏汽车", "股票代码": "09868.HK", "lp_code": "09868.HK"},
-    {"股票名称": "海尔智家", "股票代码": "06690.HK", "lp_code": "06690.HK"},
-    {"股票名称": "李宁", "股票代码": "02331.HK", "lp_code": "02331.HK"},
-    {"股票名称": "安踏体育", "股票代码": "02020.HK", "lp_code": "02020.HK"},
-]
-
-SUPPLEMENT_INDICES = [
-    {"指数名称": "纳斯达克100指数", "指数代码": ".NDX", "lp_code": ".NDX"},
-    {"指数名称": "标普500指数", "指数代码": ".SPX", "lp_code": ".SPX"},
-    {"指数名称": "道琼斯指数", "指数代码": ".DJI", "lp_code": ".DJI"},
-]
-
-
 def main():
     logger.info("=== Starting market data fetch via Longport SDK ===")
 
     targets_config = load_targets_config()
     INDICES = get_indices_from_config(targets_config)
     STOCKS = get_stocks_from_config(targets_config)
-
-    INDICES = INDICES + SUPPLEMENT_INDICES
 
     logger.info(f"Loaded {len(INDICES)} indices and {len(STOCKS)} stocks from config")
 
@@ -280,34 +257,12 @@ def main():
     df_stock.to_csv(stock_csv, index=False, encoding='utf-8-sig')
     logger.info(f"Stock data saved to {stock_csv}")
 
-    logger.info("--- Fetching CBBC Stock Data ---")
-    cbbc_results = []
-    for stock in CBBC_STOCKS:
-        logger.info(f"Fetching CBBC stock: {stock['股票名称']} ({stock['lp_code']})")
-        price, ts, source = fetch_longport_stock_data(ctx, stock['lp_code'])
-        time_str = format_timestamp(ts, False) if ts else "获取失败"
-        cbbc_results.append({
-            "股票名称": stock['股票名称'],
-            "股票代码": stock['股票代码'],
-            "当前最新价格(HKD)": price if price else "获取失败",
-            "当前最新价格对应时间戳": time_str,
-            "数据来源": source
-        })
-        time.sleep(0.3)
-
-    df_cbbc = pd.DataFrame(cbbc_results)
-    cbbc_csv = os.path.join(OUTPUT_DIR, 'cbbc_stock_data.csv')
-    df_cbbc.to_csv(cbbc_csv, index=False, encoding='utf-8-sig')
-    logger.info(f"CBBC stock data saved to {cbbc_csv}")
-
     logger.info("=== Data fetch completed ===")
 
     print("\n=== 指数数据 ===")
     print(df_index.to_string(index=False))
     print("\n=== 个股数据 ===")
     print(df_stock.to_string(index=False))
-    print("\n=== 牛熊证个股数据 ===")
-    print(df_cbbc.to_string(index=False))
 
 
 if __name__ == "__main__":
