@@ -20,12 +20,33 @@ df_index = pd.read_csv(os.path.join(OUTPUT_DIR, 'index_data.csv'))
 df_stock = pd.read_csv(os.path.join(OUTPUT_DIR, 'stock_data.csv'))
 df_cbbc = pd.read_csv(os.path.join(OUTPUT_DIR, 'cbbc_stock_data.csv'))
 
-hsi = 26487.87
-hstech = 5061.80
-hscei = 9052.34
-ndx = 26592.77
-spx = 7109.14
-dji = 49442.56
+index_price_map = {}
+for _, row in df_index.iterrows():
+    try:
+        index_price_map[row['指数名称']] = float(row['当前最新点数'])
+    except (ValueError, TypeError):
+        pass
+
+stock_price_map = {}
+for _, row in df_stock.iterrows():
+    try:
+        stock_price_map[row['股票代码']] = float(row['当前最新价格(HKD)'])
+    except (ValueError, TypeError):
+        pass
+
+cbbc_price_map = {}
+for _, row in df_cbbc.iterrows():
+    try:
+        cbbc_price_map[row['股票代码']] = float(row['当前最新价格(HKD)'])
+    except (ValueError, TypeError):
+        pass
+
+hsi = index_price_map.get('恒生指数', 26137.01)
+hstech = index_price_map.get('恒生科技指数', 4950.42)
+hscei = index_price_map.get('国企指数', 8805.80)
+ndx = index_price_map.get('纳斯达克100指数', 26504.30)
+spx = index_price_map.get('标普500指数', 7064.01)
+dji = index_price_map.get('道琼斯指数', 49149.38)
 
 def calc_rise(current, target):
     return round((target - current) / current * 100, 2)
@@ -49,102 +70,102 @@ index_analysis = [
 ]
 
 stock_analysis = [
-    {"name": "腾讯控股", "code": "00700.HK", "price": 519.0, "trend": "震荡偏强", "high": 620, "low": 450, "advice": "做多", "position": "持有",
-     "events": "微信AI搜索功能上线，游戏版号持续获批，回购计划推进", "logic": "AI赋能核心业务提升变现效率，游戏出海加速，估值仍有修复空间，短期回调提供加仓机会。"},
-    {"name": "阿里巴巴", "code": "09988.HK", "price": 136.3, "trend": "震荡偏强", "high": 180, "low": 110, "advice": "做多", "position": "加仓",
-     "events": "云业务AI收入快速增长，菜鸟分拆上市推进中", "logic": "电商基本盘稳固，云业务AI转型加速，估值处于历史低位具备安全边际。"},
-    {"name": "小米", "code": "01810.HK", "price": 32.4, "trend": "震荡上行", "high": 42, "low": 26, "advice": "做多", "position": "加仓",
+    {"name": "腾讯控股", "code": "00700.HK", "price": stock_price_map.get("00700.HK", 505.50), "trend": "震荡偏弱", "high": 600, "low": 430, "advice": "做多", "position": "持有",
+     "events": "微信AI搜索功能上线，游戏版号持续获批，回购计划推进", "logic": "AI赋能核心业务提升变现效率，但科网股整体回调，短期受市场情绪拖累，估值仍有修复空间。"},
+    {"name": "阿里巴巴", "code": "09988.HK", "price": stock_price_map.get("09988.HK", 131.80), "trend": "震荡偏弱", "high": 170, "low": 105, "advice": "做多", "position": "持有",
+     "events": "云业务AI收入快速增长，菜鸟分拆上市推进中，今日跌超3%", "logic": "电商基本盘稳固，云业务AI转型加速，但中概股普跌拖累短期表现，估值处于历史低位具备安全边际。"},
+    {"name": "小米", "code": "01810.HK", "price": stock_price_map.get("01810.HK", 31.96), "trend": "震荡偏强", "high": 42, "low": 26, "advice": "做多", "position": "加仓",
      "events": "小米汽车SU7交付量持续攀升，IoT生态扩张", "logic": "汽车业务放量带动估值重估，手机高端化战略见效，生态协同效应增强。"},
-    {"name": "快手", "code": "01024.HK", "price": 46.38, "trend": "震荡偏强", "high": 58, "low": 38, "advice": "做多", "position": "持有",
-     "events": "短剧和电商GMV增长超预期，海外业务减亏", "logic": "商业化效率持续提升，盈利拐点确认，但需关注用户增长天花板。"},
-    {"name": "京东", "code": "09618.HK", "price": 123.0, "trend": "震荡偏弱", "high": 150, "low": 100, "advice": "观望", "position": "平仓",
+    {"name": "快手", "code": "01024.HK", "price": stock_price_map.get("01024.HK", 45.44), "trend": "震荡偏弱", "high": 55, "low": 36, "advice": "做多", "position": "持有",
+     "events": "短剧和电商GMV增长超预期，海外业务减亏", "logic": "商业化效率持续提升，盈利拐点确认，但科网股整体回调短期承压。"},
+    {"name": "京东", "code": "09618.HK", "price": stock_price_map.get("09618.HK", 119.80), "trend": "震荡偏弱", "high": 150, "low": 100, "advice": "观望", "position": "平仓",
      "events": "京东物流整合推进，百亿补贴效果待验证", "logic": "电商竞争加剧挤压利润率，物流优势难以完全转化为盈利，短期缺乏催化。"},
-    {"name": "美团", "code": "03690.HK", "price": 86.45, "trend": "震荡偏强", "high": 105, "low": 68, "advice": "做多", "position": "持有",
-     "events": "即时零售业务扩张，到店业务竞争趋缓", "logic": "本地生活壁垒稳固，新业务减亏趋势明确，盈利能力持续改善。"},
-    {"name": "紫金矿业", "code": "02899.HK", "price": 38.2, "trend": "震荡上行", "high": 50, "low": 30, "advice": "做多", "position": "加仓",
+    {"name": "美团", "code": "03690.HK", "price": stock_price_map.get("03690.HK", 84.45), "trend": "震荡偏弱", "high": 105, "low": 68, "advice": "做多", "position": "持有",
+     "events": "即时零售业务扩张，到店业务竞争趋缓", "logic": "本地生活壁垒稳固，新业务减亏趋势明确，但科网股回调短期承压。"},
+    {"name": "紫金矿业", "code": "02899.HK", "price": stock_price_map.get("02899.HK", 38.06), "trend": "震荡上行", "high": 50, "low": 30, "advice": "做多", "position": "加仓",
      "events": "黄金价格屡创新高，铜矿产能扩张", "logic": "金价受益于地缘避险和降息预期，铜价受AI算力需求拉动，量价齐升逻辑清晰。"},
-    {"name": "中芯国际", "code": "00981.HK", "price": 60.1, "trend": "震荡偏强", "high": 75, "low": 48, "advice": "做多", "position": "持有",
+    {"name": "中芯国际", "code": "00981.HK", "price": stock_price_map.get("00981.HK", 59.30), "trend": "震荡偏强", "high": 75, "low": 48, "advice": "做多", "position": "持有",
      "events": "成熟制程产能利用率回升，国产替代加速", "logic": "半导体国产化长期逻辑不变，成熟制程需求稳健，但先进制程突破仍需时间。"},
-    {"name": "华虹半导体", "code": "01347.HK", "price": 95.4, "trend": "震荡偏弱", "high": 115, "low": 75, "advice": "观望", "position": "平仓",
+    {"name": "华虹半导体", "code": "01347.HK", "price": stock_price_map.get("01347.HK", 98.75), "trend": "震荡偏弱", "high": 115, "low": 75, "advice": "观望", "position": "平仓",
      "events": "功率半导体需求分化，产能利用率恢复缓慢", "logic": "成熟制程竞争加剧，价格压力较大，需等待需求端明确改善信号。"},
-    {"name": "泡泡玛特", "code": "09992.HK", "price": 164.4, "trend": "震荡偏强", "high": 200, "low": 130, "advice": "做多", "position": "持有",
+    {"name": "泡泡玛特", "code": "09992.HK", "price": stock_price_map.get("09992.HK", 160.80), "trend": "震荡偏强", "high": 200, "low": 130, "advice": "做多", "position": "持有",
      "events": "海外市场快速扩张，新IP持续孵化", "logic": "出海逻辑验证中，IP矩阵丰富度提升，但高估值需要业绩持续超预期支撑。"},
-    {"name": "中国神华", "code": "01088.HK", "price": 46.58, "trend": "震荡上行", "high": 55, "low": 38, "advice": "做多", "position": "加仓",
-     "events": "煤炭长协价格稳定，分红率维持高位，今日涨超3%领涨蓝筹", "logic": "高股息防御属性突出，煤价中枢上移利好盈利，能源板块整体受益油价上涨。"},
-    {"name": "宁德时代", "code": "03750.HK", "price": 736.0, "trend": "震荡上行", "high": 920, "low": 580, "advice": "做多", "position": "加仓",
-     "events": "港股股价再创历史新高，今日涨超4%，2026超级科技日将发布全新技术", "logic": "全球动力电池龙头地位稳固，储能业务高增长，超级科技日催化短期情绪。"},
-    {"name": "赣锋锂业", "code": "01772.HK", "price": 80.4, "trend": "震荡偏弱", "high": 100, "low": 60, "advice": "观望", "position": "平仓",
-     "events": "锂价低位震荡，产能扩张与需求恢复错配", "logic": "锂价底部确认但反弹力度有限，行业供给过剩格局未根本改变。"},
-    {"name": "昆仑能源", "code": "00135.HK", "price": 7.74, "trend": "震荡偏强", "high": 9.5, "low": 6.5, "advice": "做多", "position": "持有",
+    {"name": "中国神华", "code": "01088.HK", "price": stock_price_map.get("01088.HK", 46.52), "trend": "震荡偏强", "high": 55, "low": 38, "advice": "做多", "position": "持有",
+     "events": "煤炭长协价格稳定，分红率维持高位", "logic": "高股息防御属性突出，煤价中枢上移利好盈利，能源板块整体受益油价上涨。"},
+    {"name": "宁德时代", "code": "03750.HK", "price": stock_price_map.get("03750.HK", 700.00), "trend": "震荡偏弱", "high": 900, "low": 560, "advice": "做多", "position": "持有",
+     "events": "超级科技日发布全新技术，中石化拟出售850万股H股，今日跌超4%", "logic": "全球动力电池龙头地位稳固，储能业务高增长，但大股东减持和锂电池板块回调短期承压。"},
+    {"name": "赣锋锂业", "code": "01772.HK", "price": stock_price_map.get("01772.HK", 78.35), "trend": "震荡偏弱", "high": 100, "low": 60, "advice": "观望", "position": "平仓",
+     "events": "锂价低位震荡，产能扩张与需求恢复错配，锂电池股跌幅居前", "logic": "锂价底部确认但反弹力度有限，行业供给过剩格局未根本改变。"},
+    {"name": "昆仑能源", "code": "00135.HK", "price": stock_price_map.get("00135.HK", 7.70), "trend": "震荡偏强", "high": 9.5, "low": 6.5, "advice": "做多", "position": "持有",
      "events": "天然气销售量增长，管道资产注入预期", "logic": "天然气消费量稳步增长，中石油体系内资源协同优势明显，估值偏低。"},
-    {"name": "中国石油化工股份", "code": "00386.HK", "price": 4.6, "trend": "震荡上行", "high": 5.8, "low": 3.8, "advice": "做多", "position": "加仓",
+    {"name": "中国石油化工股份", "code": "00386.HK", "price": stock_price_map.get("00386.HK", 4.51), "trend": "震荡上行", "high": 5.8, "low": 3.8, "advice": "做多", "position": "加仓",
      "events": "油价飙升直接利好上游，炼化盈利改善", "logic": "油价高位利好上游，炼化价差修复，高股息特征在震荡市中具备吸引力。"},
-    {"name": "国泰君安国际", "code": "01788.HK", "price": 2.65, "trend": "震荡偏强", "high": 3.3, "low": 2.2, "advice": "做多", "position": "持有",
-     "events": "港股成交额回升利好经纪业务，跨境理财通扩容", "logic": "港股市场活跃度提升直接受益，财富管理转型推进，估值处于历史低位。"},
-    {"name": "中国宏桥", "code": "01378.HK", "price": 37.12, "trend": "震荡上行", "high": 46, "low": 30, "advice": "做多", "position": "加仓",
+    {"name": "国泰君安国际", "code": "01788.HK", "price": stock_price_map.get("01788.HK", 2.56), "trend": "震荡偏强", "high": 3.3, "low": 2.2, "advice": "做多", "position": "持有",
+     "events": "港股成交额回升利好经纪业务，中资券商股逆势活跃", "logic": "港股市场活跃度提升直接受益，财富管理转型推进，估值处于历史低位。"},
+    {"name": "中国宏桥", "code": "01378.HK", "price": stock_price_map.get("01378.HK", 36.08), "trend": "震荡上行", "high": 46, "low": 30, "advice": "做多", "position": "加仓",
      "events": "铝价受地缘冲突支撑上涨，产能优化推进", "logic": "电解铝供给刚性约束，油价推升能源成本但铝价传导顺畅，盈利弹性大。"},
-    {"name": "招商银行", "code": "03968.HK", "price": 51.35, "trend": "震荡偏强", "high": 62, "low": 43, "advice": "做多", "position": "持有",
+    {"name": "招商银行", "code": "03968.HK", "price": stock_price_map.get("03968.HK", 51.00), "trend": "震荡偏强", "high": 62, "low": 43, "advice": "做多", "position": "持有",
      "events": "零售银行龙头地位稳固，财富管理业务恢复增长", "logic": "资产质量优于同业，零售业务护城河深厚，估值修复空间较大。"},
-    {"name": "建设银行", "code": "00939.HK", "price": 8.96, "trend": "震荡偏强", "high": 10.5, "low": 7.5, "advice": "做多", "position": "持有",
+    {"name": "建设银行", "code": "00939.HK", "price": stock_price_map.get("00939.HK", 8.78), "trend": "震荡偏强", "high": 10.5, "low": 7.5, "advice": "做多", "position": "持有",
      "events": "信贷投放稳健，分红率维持30%以上", "logic": "国有大行估值极低，股息率超7%具备配置价值，但净息差收窄压力持续。"},
-    {"name": "中国银行", "code": "03988.HK", "price": 5.25, "trend": "震荡偏强", "high": 6.2, "low": 4.4, "advice": "做多", "position": "持有",
+    {"name": "中国银行", "code": "03988.HK", "price": stock_price_map.get("03988.HK", 5.13), "trend": "震荡偏强", "high": 6.2, "low": 4.4, "advice": "做多", "position": "持有",
      "events": "国际化业务优势突出，跨境人民币结算量增长", "logic": "外汇业务和跨境金融优势明显，高股息低估值特征突出。"},
-    {"name": "汇丰控股", "code": "00005.HK", "price": 143.7, "trend": "震荡偏强", "high": 168, "low": 125, "advice": "做多", "position": "持有",
+    {"name": "汇丰控股", "code": "00005.HK", "price": stock_price_map.get("00005.HK", 143.80), "trend": "震荡偏强", "high": 168, "low": 125, "advice": "做多", "position": "持有",
      "events": "利率维持高位利好净息差，回购计划持续推进", "logic": "高利率环境直接受益，亚洲业务增长强劲，股东回报力度大。"},
-    {"name": "信达生物", "code": "01801.HK", "price": 89.85, "trend": "震荡上行", "high": 120, "low": 70, "advice": "做多", "position": "加仓",
+    {"name": "信达生物", "code": "01801.HK", "price": stock_price_map.get("01801.HK", 88.35), "trend": "震荡偏强", "high": 120, "low": 70, "advice": "做多", "position": "加仓",
      "events": "PD-1海外授权推进，减重药物临床进展积极", "logic": "创新药管线持续兑现，商业化能力提升，GLP-1赛道布局具备想象空间。"},
-    {"name": "药明生物", "code": "02269.HK", "price": 35.3, "trend": "震荡偏弱", "high": 45, "low": 25, "advice": "观望", "position": "平仓",
+    {"name": "药明生物", "code": "02269.HK", "price": stock_price_map.get("02269.HK", 35.04), "trend": "震荡偏弱", "high": 45, "low": 25, "advice": "观望", "position": "平仓",
      "events": "美国生物安全法案影响持续，海外订单恢复缓慢", "logic": "地缘政治风险压制估值，短期订单恢复不确定性大，需等待政策面明朗。"},
-    {"name": "中国海洋石油", "code": "00883.HK", "price": 26.6, "trend": "震荡上行", "high": 34, "low": 22, "advice": "做多", "position": "加仓",
+    {"name": "中国海洋石油", "code": "00883.HK", "price": stock_price_map.get("00883.HK", 26.76), "trend": "震荡上行", "high": 34, "low": 22, "advice": "做多", "position": "加仓",
      "events": "油价飙升直接受益，深海油气勘探突破", "logic": "地缘冲突推升油价，桶油成本行业最低，高股息+高盈利弹性双击。"},
-    {"name": "中国石油股份", "code": "00857.HK", "price": 10.44, "trend": "震荡上行", "high": 13.5, "low": 8.5, "advice": "做多", "position": "加仓",
+    {"name": "中国石油股份", "code": "00857.HK", "price": stock_price_map.get("00857.HK", 10.64), "trend": "震荡上行", "high": 13.5, "low": 8.5, "advice": "做多", "position": "加仓",
      "events": "油价高位运行利好上游，天然气业务快速增长", "logic": "油价每涨10美元增厚利润约200亿，地缘溢价直接受益，估值仍偏低。"},
-    {"name": "工商银行", "code": "01398.HK", "price": 7.26, "trend": "震荡偏强", "high": 8.5, "low": 6.0, "advice": "做多", "position": "持有",
+    {"name": "工商银行", "code": "01398.HK", "price": stock_price_map.get("01398.HK", 7.13), "trend": "震荡偏强", "high": 8.5, "low": 6.0, "advice": "做多", "position": "持有",
      "events": "信贷规模稳健增长，不良率持续下降", "logic": "宇宙行估值极低，股息率超8%，防御配置价值突出。"},
-    {"name": "比亚迪股份", "code": "01211.HK", "price": 109.1, "trend": "震荡上行", "high": 145, "low": 88, "advice": "做多", "position": "加仓",
+    {"name": "比亚迪股份", "code": "01211.HK", "price": stock_price_map.get("01211.HK", 107.70), "trend": "震荡偏强", "high": 145, "low": 88, "advice": "做多", "position": "持有",
      "events": "海外市场拓展加速，智能驾驶技术突破", "logic": "新能源车全球销量龙头，海外放量打开第二增长曲线，智能化升级提升产品力。"},
 ]
 
 cbbc_stock_analysis = [
-    {"name": "新鸿基地产", "code": "00016.HK", "price": 138.4, "trend": "震荡偏弱", "high": 160, "low": 115, "advice": "观望", "position": "平仓",
+    {"name": "新鸿基地产", "code": "00016.HK", "price": cbbc_price_map.get("00016.HK", 137.60), "trend": "震荡偏弱", "high": 160, "low": 115, "advice": "观望", "position": "平仓",
      "events": "香港楼市成交回暖但价格承压，利率维持高位增加融资成本", "logic": "高利率环境压制地产估值，楼市复苏力度不及预期，短期缺乏催化。"},
-    {"name": "恒基地产", "code": "00012.HK", "price": 30.7, "trend": "震荡偏弱", "high": 36, "low": 25, "advice": "观望", "position": "平仓",
+    {"name": "恒基地产", "code": "00012.HK", "price": cbbc_price_map.get("00012.HK", 30.44), "trend": "震荡偏弱", "high": 36, "low": 25, "advice": "观望", "position": "平仓",
      "events": "农地转换进展缓慢，楼市去化压力仍存", "logic": "地产板块整体承压，利率高位增加持有成本，需等待楼市政策进一步放松。"},
-    {"name": "新世界发展", "code": "00017.HK", "price": 8.82, "trend": "震荡下行", "high": 10.5, "low": 6.5, "advice": "做空", "position": "根据当前预设，做空无仓位调整建议",
+    {"name": "新世界发展", "code": "00017.HK", "price": cbbc_price_map.get("00017.HK", 8.73), "trend": "震荡下行", "high": 10.5, "low": 6.5, "advice": "做空", "position": "根据当前预设，做空无仓位调整建议",
      "events": "债务压力较大，出售资产回笼资金", "logic": "财务杠杆过高，降杠杆过程压制估值，地产业务恢复缓慢。"},
-    {"name": "长实集团", "code": "01113.HK", "price": 48.86, "trend": "震荡偏弱", "high": 56, "low": 40, "advice": "观望", "position": "平仓",
+    {"name": "长实集团", "code": "01113.HK", "price": cbbc_price_map.get("01113.HK", 48.28), "trend": "震荡偏弱", "high": 56, "low": 40, "advice": "观望", "position": "平仓",
      "events": "飞机租赁业务稳健，地产销售承压", "logic": "多元化业务提供一定防御，但地产核心业务仍受高利率压制。"},
-    {"name": "香港交易所", "code": "00388.HK", "price": 417.2, "trend": "震荡偏强", "high": 480, "low": 360, "advice": "做多", "position": "持有",
-     "events": "港股成交额回升，胜宏科技IPO首日涨超50%", "logic": "市场活跃度提升直接受益，IPO市场回暖，垄断地位不可替代。"},
-    {"name": "友邦保险", "code": "01299.HK", "price": 82.8, "trend": "震荡偏强", "high": 98, "low": 70, "advice": "做多", "position": "持有",
+    {"name": "香港交易所", "code": "00388.HK", "price": cbbc_price_map.get("00388.HK", 416.40), "trend": "震荡偏强", "high": 480, "low": 360, "advice": "做多", "position": "持有",
+     "events": "港股成交额回升，IPO市场回暖", "logic": "市场活跃度提升直接受益，IPO市场回暖，垄断地位不可替代。"},
+    {"name": "友邦保险", "code": "01299.HK", "price": cbbc_price_map.get("01299.HK", 83.15), "trend": "震荡偏强", "high": 98, "low": 70, "advice": "做多", "position": "持有",
      "events": "新业务价值增长稳健，内地访客需求强劲", "logic": "亚太寿险龙头地位稳固，利率高位利好投资收益，估值处于合理区间。"},
-    {"name": "中国人寿", "code": "02628.HK", "price": 27.52, "trend": "震荡偏强", "high": 34, "low": 22, "advice": "做多", "position": "持有",
+    {"name": "中国人寿", "code": "02628.HK", "price": cbbc_price_map.get("02628.HK", 27.34), "trend": "震荡偏强", "high": 34, "low": 22, "advice": "做多", "position": "持有",
      "events": "保费收入增长，投资收益改善", "logic": "寿险行业景气度回升，权益市场回暖利好投资端，估值修复空间较大。"},
-    {"name": "中国平安", "code": "02318.HK", "price": 61.45, "trend": "震荡偏强", "high": 75, "low": 50, "advice": "做多", "position": "持有",
+    {"name": "中国平安", "code": "02318.HK", "price": cbbc_price_map.get("02318.HK", 61.30), "trend": "震荡偏强", "high": 75, "low": 50, "advice": "做多", "position": "持有",
      "events": "综合金融生态协同增强，科技赋能降本增效", "logic": "金融+科技双轮驱动，寿险改革成效显现，估值处于历史低位。"},
-    {"name": "中国移动", "code": "00941.HK", "price": 83.7, "trend": "震荡偏强", "high": 95, "low": 70, "advice": "做多", "position": "持有",
-     "events": "5G用户渗透率提升，算力网络建设加速，国内首个Pre6G试验网投入运行", "logic": "高股息+稳增长特征突出，AI算力需求拉动云业务增长，6G催化通信板块。"},
-    {"name": "中国联通", "code": "00762.HK", "price": 7.4, "trend": "震荡偏强", "high": 8.8, "low": 6.2, "advice": "做多", "position": "持有",
+    {"name": "中国移动", "code": "00941.HK", "price": cbbc_price_map.get("00941.HK", 83.45), "trend": "震荡偏强", "high": 95, "low": 70, "advice": "做多", "position": "持有",
+     "events": "5G用户渗透率提升，算力网络建设加速", "logic": "高股息+稳增长特征突出，AI算力需求拉动云业务增长。"},
+    {"name": "中国联通", "code": "00762.HK", "price": cbbc_price_map.get("00762.HK", 7.27), "trend": "震荡偏强", "high": 8.8, "low": 6.2, "advice": "做多", "position": "持有",
      "events": "产业互联网收入占比提升，大数据业务增长", "logic": "数字化转型加速，产业互联网打开增长空间，估值偏低具备安全边际。"},
-    {"name": "中国电信", "code": "00728.HK", "price": 5.05, "trend": "震荡偏强", "high": 6.0, "low": 4.2, "advice": "做多", "position": "持有",
-     "events": "天翼云收入高速增长，AI大模型落地应用，Pre6G试验网投入运行", "logic": "云业务增速行业领先，AI+通信融合催化，高股息率具备配置吸引力。"},
-    {"name": "网易", "code": "09999.HK", "price": 182.9, "trend": "震荡偏强", "high": 220, "low": 155, "advice": "做多", "position": "持有",
-     "events": "新游戏上线表现优异，AI赋能游戏研发提效", "logic": "游戏管线丰富，AI降本增效逻辑清晰，海外市场拓展顺利。"},
-    {"name": "百度集团", "code": "09888.HK", "price": 124.6, "trend": "震荡上行", "high": 155, "low": 100, "advice": "做多", "position": "加仓",
-     "events": "文心大模型持续迭代，自动驾驶商业化推进，今日逆势涨超1%", "logic": "AI搜索和大模型商业化加速，自动驾驶Robotaxi落地，估值修复空间大。"},
-    {"name": "哔哩哔哩", "code": "09626.HK", "price": 189.5, "trend": "震荡偏强", "high": 240, "low": 160, "advice": "做多", "position": "持有",
-     "events": "广告和增值服务收入高增长，首次实现季度盈利", "logic": "盈利拐点确认，社区生态变现效率提升，但估值偏高需业绩持续验证。"},
-    {"name": "蔚来", "code": "09866.HK", "price": 52.65, "trend": "震荡偏弱", "high": 65, "low": 38, "advice": "观望", "position": "平仓",
+    {"name": "中国电信", "code": "00728.HK", "price": cbbc_price_map.get("00728.HK", 5.05), "trend": "震荡偏强", "high": 6.0, "low": 4.2, "advice": "做多", "position": "持有",
+     "events": "天翼云收入高速增长，AI大模型落地应用", "logic": "云业务增速行业领先，AI+通信融合催化，高股息率具备配置吸引力。"},
+    {"name": "网易", "code": "09999.HK", "price": cbbc_price_map.get("09999.HK", 177.80), "trend": "震荡偏弱", "high": 220, "low": 155, "advice": "做多", "position": "持有",
+     "events": "新游戏上线表现优异，AI赋能游戏研发提效", "logic": "游戏管线丰富，AI降本增效逻辑清晰，但科网股整体回调短期承压。"},
+    {"name": "百度集团", "code": "09888.HK", "price": cbbc_price_map.get("09888.HK", 121.20), "trend": "震荡偏弱", "high": 155, "low": 100, "advice": "观望", "position": "平仓",
+     "events": "文心大模型持续迭代，但变现路径不明确，自动驾驶商业化缓慢", "logic": "AI概念催化减弱，核心搜索广告业务面临字节跳动竞争。"},
+    {"name": "哔哩哔哩", "code": "09626.HK", "price": cbbc_price_map.get("09626.HK", 177.80), "trend": "震荡偏弱", "high": 240, "low": 160, "advice": "观望", "position": "平仓",
+     "events": "广告和增值服务收入增长，但盈利持续性待验证", "logic": "社区生态变现效率提升，但估值偏高需业绩持续验证。"},
+    {"name": "蔚来", "code": "09866.HK", "price": cbbc_price_map.get("09866.HK", 51.70), "trend": "震荡偏弱", "high": 65, "low": 38, "advice": "观望", "position": "平仓",
      "events": "换电网络扩张，但交付量增长放缓", "logic": "换电模式差异化但资本开支大，销量增速落后竞品，盈利时点不确定。"},
-    {"name": "理想汽车", "code": "02015.HK", "price": 73.2, "trend": "震荡偏强", "high": 92, "low": 58, "advice": "做多", "position": "持有",
+    {"name": "理想汽车", "code": "02015.HK", "price": cbbc_price_map.get("02015.HK", 73.55), "trend": "震荡偏弱", "high": 92, "low": 58, "advice": "做多", "position": "持有",
      "events": "纯电车型上市，智驾技术迭代", "logic": "产品矩阵完善，家庭用车定位精准，但纯电转型效果待验证。"},
-    {"name": "小鹏汽车", "code": "09868.HK", "price": 68.3, "trend": "震荡偏强", "high": 88, "low": 52, "advice": "做多", "position": "持有",
-     "events": "MONA系列销量超预期，智驾技术领先", "logic": "智驾技术护城河加深，大众合作推进，但盈利能力仍需改善。"},
-    {"name": "海尔智家", "code": "06690.HK", "price": 21.36, "trend": "震荡偏强", "high": 26, "low": 18, "advice": "做多", "position": "持有",
+    {"name": "小鹏汽车", "code": "09868.HK", "price": cbbc_price_map.get("09868.HK", 66.60), "trend": "震荡偏弱", "high": 88, "low": 52, "advice": "观望", "position": "平仓",
+     "events": "MONA系列销量超预期，但毛利率仍为负", "logic": "智驾技术领先但变现困难，规模效应尚未体现，盈利遥遥无期。"},
+    {"name": "海尔智家", "code": "06690.HK", "price": cbbc_price_map.get("06690.HK", 21.20), "trend": "震荡偏强", "high": 26, "low": 18, "advice": "做多", "position": "持有",
      "events": "海外市场盈利改善，高端品牌卡萨帝增长", "logic": "全球化布局成效显现，高端化战略提升盈利能力，估值合理。"},
-    {"name": "李宁", "code": "02331.HK", "price": 21.42, "trend": "震荡偏弱", "high": 26, "low": 16, "advice": "观望", "position": "平仓",
+    {"name": "李宁", "code": "02331.HK", "price": cbbc_price_map.get("02331.HK", 20.50), "trend": "震荡偏弱", "high": 26, "low": 16, "advice": "观望", "position": "平仓",
      "events": "国潮热度退减，库存去化进行中", "logic": "运动服饰竞争加剧，品牌力边际减弱，需等待渠道改革和产品创新见效。"},
-    {"name": "安踏体育", "code": "02020.HK", "price": 86.1, "trend": "震荡偏强", "high": 105, "low": 70, "advice": "做多", "position": "持有",
+    {"name": "安踏体育", "code": "02020.HK", "price": cbbc_price_map.get("02020.HK", 84.95), "trend": "震荡偏强", "high": 105, "low": 70, "advice": "做多", "position": "持有",
      "events": "亚玛芬体育整合顺利，多品牌战略成效显著", "logic": "多品牌矩阵覆盖各细分市场，全球化进程加速，经营效率行业领先。"},
 ]
 

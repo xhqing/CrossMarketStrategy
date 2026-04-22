@@ -4,6 +4,7 @@ import json
 import time
 import logging
 import pandas as pd
+import yaml
 from datetime import datetime
 import pytz
 
@@ -23,67 +24,59 @@ except ImportError:
 
 from config import LONGPORT_APP_KEY, LONGPORT_APP_SECRET, LONGPORT_ACCESS_TOKEN
 
-INDICES = [
-    {"指数名称": "恒生指数", "指数代码": "HSI", "lp_code": "HSI"},
-    {"指数名称": "恒生科技指数", "指数代码": "HSTECH", "lp_code": "HSTECH"},
-    {"指数名称": "国企指数", "指数代码": "HSCEI", "lp_code": "HSCEI"},
-    {"指数名称": "纳斯达克100指数", "指数代码": ".NDX", "lp_code": ".NDX"},
-    {"指数名称": "标普500指数", "指数代码": ".SPX", "lp_code": ".SPX"},
-    {"指数名称": "道琼斯指数", "指数代码": ".DJI", "lp_code": ".DJI"},
-]
 
-STOCKS = [
-    {"股票名称": "腾讯控股", "股票代码": "00700.HK", "lp_code": "00700.HK"},
-    {"股票名称": "阿里巴巴", "股票代码": "09988.HK", "lp_code": "09988.HK"},
-    {"股票名称": "小米", "股票代码": "01810.HK", "lp_code": "01810.HK"},
-    {"股票名称": "快手", "股票代码": "01024.HK", "lp_code": "01024.HK"},
-    {"股票名称": "京东", "股票代码": "09618.HK", "lp_code": "09618.HK"},
-    {"股票名称": "美团", "股票代码": "03690.HK", "lp_code": "03690.HK"},
-    {"股票名称": "紫金矿业", "股票代码": "02899.HK", "lp_code": "02899.HK"},
-    {"股票名称": "中芯国际", "股票代码": "00981.HK", "lp_code": "00981.HK"},
-    {"股票名称": "华虹半导体", "股票代码": "01347.HK", "lp_code": "01347.HK"},
-    {"股票名称": "泡泡玛特", "股票代码": "09992.HK", "lp_code": "09992.HK"},
-    {"股票名称": "中国神华", "股票代码": "01088.HK", "lp_code": "01088.HK"},
-    {"股票名称": "宁德时代", "股票代码": "03750.HK", "lp_code": "03750.HK"},
-    {"股票名称": "赣锋锂业", "股票代码": "01772.HK", "lp_code": "01772.HK"},
-    {"股票名称": "昆仑能源", "股票代码": "00135.HK", "lp_code": "00135.HK"},
-    {"股票名称": "中国石油化工股份", "股票代码": "00386.HK", "lp_code": "00386.HK"},
-    {"股票名称": "国泰君安国际", "股票代码": "01788.HK", "lp_code": "01788.HK"},
-    {"股票名称": "中国宏桥", "股票代码": "01378.HK", "lp_code": "01378.HK"},
-    {"股票名称": "招商银行", "股票代码": "03968.HK", "lp_code": "03968.HK"},
-    {"股票名称": "建设银行", "股票代码": "00939.HK", "lp_code": "00939.HK"},
-    {"股票名称": "中国银行", "股票代码": "03988.HK", "lp_code": "03988.HK"},
-    {"股票名称": "汇丰控股", "股票代码": "00005.HK", "lp_code": "00005.HK"},
-    {"股票名称": "信达生物", "股票代码": "01801.HK", "lp_code": "01801.HK"},
-    {"股票名称": "药明生物", "股票代码": "02269.HK", "lp_code": "02269.HK"},
-    {"股票名称": "中国海洋石油", "股票代码": "00883.HK", "lp_code": "00883.HK"},
-    {"股票名称": "中国石油股份", "股票代码": "00857.HK", "lp_code": "00857.HK"},
-    {"股票名称": "工商银行", "股票代码": "01398.HK", "lp_code": "01398.HK"},
-    {"股票名称": "比亚迪股份", "股票代码": "01211.HK", "lp_code": "01211.HK"},
-]
+def load_targets_config():
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'targets.yaml')
+    if not os.path.exists(config_path):
+        logger.warning(f"targets.yaml not found at {config_path}, using empty config")
+        return {"hk_shares": {"index_major": [], "index_sector": [], "hkex_stocks": [], "hkex_etf": []}}
 
-CBBC_STOCKS = [
-    {"股票名称": "新鸿基地产", "股票代码": "00016.HK", "lp_code": "00016.HK"},
-    {"股票名称": "恒基地产", "股票代码": "00012.HK", "lp_code": "00012.HK"},
-    {"股票名称": "新世界发展", "股票代码": "00017.HK", "lp_code": "00017.HK"},
-    {"股票名称": "长实集团", "股票代码": "01113.HK", "lp_code": "01113.HK"},
-    {"股票名称": "香港交易所", "股票代码": "00388.HK", "lp_code": "00388.HK"},
-    {"股票名称": "友邦保险", "股票代码": "01299.HK", "lp_code": "01299.HK"},
-    {"股票名称": "中国人寿", "股票代码": "02628.HK", "lp_code": "02628.HK"},
-    {"股票名称": "中国平安", "股票代码": "02318.HK", "lp_code": "02318.HK"},
-    {"股票名称": "中国移动", "股票代码": "00941.HK", "lp_code": "00941.HK"},
-    {"股票名称": "中国联通", "股票代码": "00762.HK", "lp_code": "00762.HK"},
-    {"股票名称": "中国电信", "股票代码": "00728.HK", "lp_code": "00728.HK"},
-    {"股票名称": "网易", "股票代码": "09999.HK", "lp_code": "09999.HK"},
-    {"股票名称": "百度集团", "股票代码": "09888.HK", "lp_code": "09888.HK"},
-    {"股票名称": "哔哩哔哩", "股票代码": "09626.HK", "lp_code": "09626.HK"},
-    {"股票名称": "蔚来", "股票代码": "09866.HK", "lp_code": "09866.HK"},
-    {"股票名称": "理想汽车", "股票代码": "02015.HK", "lp_code": "02015.HK"},
-    {"股票名称": "小鹏汽车", "股票代码": "09868.HK", "lp_code": "09868.HK"},
-    {"股票名称": "海尔智家", "股票代码": "06690.HK", "lp_code": "06690.HK"},
-    {"股票名称": "李宁", "股票代码": "02331.HK", "lp_code": "02331.HK"},
-    {"股票名称": "安踏体育", "股票代码": "02020.HK", "lp_code": "02020.HK"},
-]
+    with open(config_path, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+    logger.info(f"Loaded targets config from {config_path}")
+    return config
+
+
+def filter_valid_targets(target_list):
+    return [t for t in target_list if t.get('name') and t.get('code')]
+
+
+def get_indices_from_config(config):
+    indices = []
+    hk_shares = config.get('hk_shares', {})
+
+    for idx in hk_shares.get('index_major', []):
+        if idx.get('name') and idx.get('code'):
+            indices.append({
+                "指数名称": idx['name'],
+                "指数代码": idx['code'],
+                "lp_code": idx['code']
+            })
+
+    for idx in hk_shares.get('index_sector', []):
+        if idx.get('name') and idx.get('code'):
+            indices.append({
+                "指数名称": idx['name'],
+                "指数代码": idx['code'],
+                "lp_code": idx['code']
+            })
+
+    return indices
+
+
+def get_stocks_from_config(config):
+    stocks = []
+    hk_shares = config.get('hk_shares', {})
+
+    for stock in hk_shares.get('hkex_stocks', []):
+        if stock.get('name') and stock.get('code'):
+            stocks.append({
+                "股票名称": stock['name'],
+                "股票代码": stock['code'],
+                "lp_code": stock['code']
+            })
+
+    return stocks
 
 
 def get_longport_context():
@@ -198,8 +191,46 @@ def format_timestamp(ts, is_us_index=False):
         return str(ts)
 
 
+CBBC_STOCKS = [
+    {"股票名称": "新鸿基地产", "股票代码": "00016.HK", "lp_code": "00016.HK"},
+    {"股票名称": "恒基地产", "股票代码": "00012.HK", "lp_code": "00012.HK"},
+    {"股票名称": "新世界发展", "股票代码": "00017.HK", "lp_code": "00017.HK"},
+    {"股票名称": "长实集团", "股票代码": "01113.HK", "lp_code": "01113.HK"},
+    {"股票名称": "香港交易所", "股票代码": "00388.HK", "lp_code": "00388.HK"},
+    {"股票名称": "友邦保险", "股票代码": "01299.HK", "lp_code": "01299.HK"},
+    {"股票名称": "中国人寿", "股票代码": "02628.HK", "lp_code": "02628.HK"},
+    {"股票名称": "中国平安", "股票代码": "02318.HK", "lp_code": "02318.HK"},
+    {"股票名称": "中国移动", "股票代码": "00941.HK", "lp_code": "00941.HK"},
+    {"股票名称": "中国联通", "股票代码": "00762.HK", "lp_code": "00762.HK"},
+    {"股票名称": "中国电信", "股票代码": "00728.HK", "lp_code": "00728.HK"},
+    {"股票名称": "网易", "股票代码": "09999.HK", "lp_code": "09999.HK"},
+    {"股票名称": "百度集团", "股票代码": "09888.HK", "lp_code": "09888.HK"},
+    {"股票名称": "哔哩哔哩", "股票代码": "09626.HK", "lp_code": "09626.HK"},
+    {"股票名称": "蔚来", "股票代码": "09866.HK", "lp_code": "09866.HK"},
+    {"股票名称": "理想汽车", "股票代码": "02015.HK", "lp_code": "02015.HK"},
+    {"股票名称": "小鹏汽车", "股票代码": "09868.HK", "lp_code": "09868.HK"},
+    {"股票名称": "海尔智家", "股票代码": "06690.HK", "lp_code": "06690.HK"},
+    {"股票名称": "李宁", "股票代码": "02331.HK", "lp_code": "02331.HK"},
+    {"股票名称": "安踏体育", "股票代码": "02020.HK", "lp_code": "02020.HK"},
+]
+
+SUPPLEMENT_INDICES = [
+    {"指数名称": "纳斯达克100指数", "指数代码": ".NDX", "lp_code": ".NDX"},
+    {"指数名称": "标普500指数", "指数代码": ".SPX", "lp_code": ".SPX"},
+    {"指数名称": "道琼斯指数", "指数代码": ".DJI", "lp_code": ".DJI"},
+]
+
+
 def main():
     logger.info("=== Starting market data fetch via Longport SDK ===")
+
+    targets_config = load_targets_config()
+    INDICES = get_indices_from_config(targets_config)
+    STOCKS = get_stocks_from_config(targets_config)
+
+    INDICES = INDICES + SUPPLEMENT_INDICES
+
+    logger.info(f"Loaded {len(INDICES)} indices and {len(STOCKS)} stocks from config")
 
     ctx = get_longport_context()
 
@@ -230,10 +261,6 @@ def main():
     logger.info(f"Index data saved to {index_csv}")
 
     logger.info("--- Fetching Stock Data ---")
-    all_stocks = STOCKS + CBBC_STOCKS
-    stock_symbols = [s['lp_code'] for s in STOCKS]
-    cbbc_symbols = [s['lp_code'] for s in CBBC_STOCKS]
-
     stock_results = []
     for i, stock in enumerate(STOCKS):
         logger.info(f"Fetching stock: {stock['股票名称']} ({stock['lp_code']})")
@@ -277,7 +304,7 @@ def main():
 
     print("\n=== 指数数据 ===")
     print(df_index.to_string(index=False))
-    print("\n=== 指定个股数据 ===")
+    print("\n=== 个股数据 ===")
     print(df_stock.to_string(index=False))
     print("\n=== 牛熊证个股数据 ===")
     print(df_cbbc.to_string(index=False))
