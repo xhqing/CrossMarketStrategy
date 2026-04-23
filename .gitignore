@@ -58,3 +58,6 @@ Thumbs.db
 
 # API credentials (do not commit)
 config.py
+
+# Report output directory
+YB_000X/

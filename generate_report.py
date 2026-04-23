@@ -4,7 +4,7 @@ from datetime import datetime
 import pytz
 import glob
 
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output')
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'YB_000X')
 
 bj_tz = pytz.timezone('Asia/Shanghai')
 now_bj = datetime.now(bj_tz)
@@ -16,9 +16,11 @@ next_num = len(existing_reports) + 1
 filename = f"YB_000{next_num}_{timestamp_str}.html"
 filepath = os.path.join(OUTPUT_DIR, filename)
 
-df_index = pd.read_csv(os.path.join(OUTPUT_DIR, 'index_data.csv'))
-df_stock = pd.read_csv(os.path.join(OUTPUT_DIR, 'stock_data.csv'))
-df_etf = pd.read_csv(os.path.join(OUTPUT_DIR, 'etf_data.csv'))
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output')
+
+df_index = pd.read_csv(os.path.join(DATA_DIR, 'index_data.csv'))
+df_stock = pd.read_csv(os.path.join(DATA_DIR, 'stock_data.csv'))
+df_etf = pd.read_csv(os.path.join(DATA_DIR, 'etf_data.csv'))
 
 index_price_map = {}
 for _, row in df_index.iterrows():

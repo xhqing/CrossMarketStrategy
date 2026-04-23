@@ -28,10 +28,12 @@ CBBC_TRAE/
 ├── README_en.md           # 项目说明文档（英文）
 ├── .gitignore             # Git 忽略规则
 ├── LICENSE                # AGPL-3.0 许可证
-└── output/                # 输出目录
-    ├── index_data.csv     # 指数数据表
-    ├── stock_data.csv     # 个股数据表
-    └── YB_XXXX_XXXXXXXXXXXX.html  # 生成的研报文件
+├── output/                # 数据文件目录
+│   ├── index_data.csv     # 指数数据表
+│   ├── stock_data.csv     # 个股数据表
+│   └── etf_data.csv       # ETF数据表
+└── YB_000X/               # 研报输出目录
+    └── YB_XXXX_YYYYMMDDHHMMSS.html  # 生成的研报文件
 ```
 
 ## 标的配置
@@ -93,7 +95,7 @@ LONGPORT_ACCESS_TOKEN = "your_access_token"
 2. 向 AI Agent（TRAE CN SOLO GLM5.1）发送指令：
    > "根据当前目录中的prompt.md中的具体需求生成一份最新的市场研报，该研报生成之后直接使用浏览器打开"
 3. Agent 将自动执行：数据获取 → 事件分析 → 指数研判 → 个股分析 → 研报生成
-4. 研报输出到 `output/` 目录，HTML 格式（命名规则：`YB_XXXX_YYYYMMDDHHMMSS.html`）
+4. 研报输出到 `YB_000X/` 目录，HTML 格式（命名规则：`YB_XXXX_YYYYMMDDHHMMSS.html`）
 
 ## 研报特性
 

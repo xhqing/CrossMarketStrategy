@@ -28,10 +28,12 @@ CBBC_TRAE/
 ├── README_en.md           # Project documentation (English)
 ├── .gitignore             # Git ignore rules
 ├── LICENSE                # AGPL-3.0 License
-└── output/                # Output directory
-    ├── index_data.csv     # Index data table
-    ├── stock_data.csv     # Stock data table
-    └── YB_XXXX_XXXXXXXXXXXX.html  # Generated research reports
+├── output/                # Data files directory
+│   ├── index_data.csv     # Index data table
+│   ├── stock_data.csv     # Stock data table
+│   └── etf_data.csv       # ETF data table
+└── YB_000X/               # Research reports output directory
+    └── YB_XXXX_YYYYMMDDHHMMSS.html  # Generated research reports
 ```
 
 ## Target Instruments
@@ -93,7 +95,7 @@ LONGPORT_ACCESS_TOKEN = "your_access_token"
 2. Give the AI Agent (TRAE CN SOLO GLM5.1) the following instruction:
    > "Generate a latest market research report based on the specific requirements in prompt.md in the current directory. After the report is generated, open it directly in the browser."
 3. The Agent will automatically execute: data fetching → event analysis → index forecast → stock analysis → report generation
-4. Reports are output to the `output/` directory in HTML format (naming: `YB_XXXX_YYYYMMDDHHMMSS.html`)
+4. Reports are output to the `YB_000X/` directory in HTML format (naming: `YB_XXXX_YYYYMMDDHHMMSS.html`)
 
 ## Report Features
 
