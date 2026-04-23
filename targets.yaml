@@ -186,9 +186,9 @@ us_shares:
 
   # ETF
   etf:
-    - name: "纳斯达克指数100ETF"
+    - name: "纳斯达克100指数ETF"
       code: "QQQ"
-    - name: "标普500ETF"
+    - name: "标普500指数ETF"
       code: "SPY"
     - name: "道琼斯工业指数ETF"
       code: "DIA"
