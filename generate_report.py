@@ -1,27 +1,137 @@
+"""
+跨市场重大事件与港股龙头策略研报生成脚本
+
+=============================================================================
+文件功能：
+    本脚本自动生成跨市场策略研报，覆盖A股、港股、美股三大市场，以港股为核心焦点。
+    研报内容包括：
+    - 市场数据展示（指数、个股、ETF）
+    - 重大事件分析（近期已发生事件 + 未来一周预测）
+    - 指数研判（6大指数的趋势展望和目标点位）
+    - 个股分析（港股龙头深度分析）
+    - ETF分析（港股ETF基金分析）
+    - 完整推理链条（宏观 → 指数 → 个股）
+
+=============================================================================
+依赖模块：
+    - os: 文件路径操作
+    - pandas (pd): CSV数据读取和数据处理
+    - datetime: 时间戳生成
+    - pytz: 时区处理（北京时间）
+    - glob: 文件查找（统计已生成研报数量）
+
+=============================================================================
+数据文件依赖：
+    - output/index_data.csv: 指数数据（指数名称、指数代码、当前最新点数、数据来源、时间戳）
+    - output/stock_data.csv: 个股数据（股票名称、股票代码、当前最新价格、数据来源、时间戳）
+    - output/etf_data.csv: ETF数据（ETF名称、ETF代码、当前最新价格、数据来源、时间戳）
+
+=============================================================================
+输出文件：
+    - YB_000X/YB_XXXX_YYYYMMDDHHMMSS.html: 生成的HTML格式研报
+      - YB_XXXX: 研报编号（自动递增，从YB_0001开始）
+      - YYYYYMMDDHHMMSS: 报告生成时的北京时间戳
+
+=============================================================================
+研报编号规则：
+    - 自动扫描YB_000X目录下已有的YB_*.html文件数量
+    - 新报告编号 = 已存在报告数量 + 1
+    - 确保每份报告有唯一编号和唯一时间戳
+
+=============================================================================
+作者/维护者：AI Agent (TRAE CN SOLO GLM5.1)
+最后更新：2026-04-23
+=============================================================================
+"""
+
 import os
 import pandas as pd
 from datetime import datetime
 import pytz
 import glob
 
+# =============================================================================
+# 配置常量
+# =============================================================================
+
+# 研报输出目录路径
+# 说明：所有生成的HTML研报将保存到此目录
+# 路径：项目根目录下的YB_000X文件夹
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'YB_000X')
 
-bj_tz = pytz.timezone('Asia/Shanghai')
-now_bj = datetime.now(bj_tz)
-report_date = now_bj.strftime('%Y年%m月%d日')
-timestamp_str = now_bj.strftime('%Y%m%d%H%M%S')
-
-existing_reports = glob.glob(os.path.join(OUTPUT_DIR, 'YB_*.html'))
-next_num = len(existing_reports) + 1
-filename = f"YB_000{next_num}_{timestamp_str}.html"
-filepath = os.path.join(OUTPUT_DIR, filename)
-
+# 数据文件目录路径
+# 说明：CSV数据文件（index_data.csv、stock_data.csv、etf_data.csv）存放位置
+# 路径：项目根目录下的output文件夹
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output')
 
+# =============================================================================
+# 时间初始化
+# =============================================================================
+
+# 设置北京时间时区
+# 用于生成准确的报告时间戳，确保时间显示为北京时间而非本地时间
+bj_tz = pytz.timezone('Asia/Shanghai')
+
+# 获取当前北京时间
+now_bj = datetime.now(bj_tz)
+
+# 格式化报告日期（用于HTML标题显示）
+# 输出格式示例：2026年04月23日
+report_date = now_bj.strftime('%Y年%m月%d日')
+
+# 格式化时间戳（用于文件名和报告生成时间显示）
+# 输出格式示例：20260423111711
+timestamp_str = now_bj.strftime('%Y%m%d%H%M%S')
+
+# =============================================================================
+# 研报编号自动生成
+# =============================================================================
+
+# 扫描YB_000X目录下已有的研报文件
+# glob模式：YB_*.html 匹配所有以YB开头、.html结尾的文件
+existing_reports = glob.glob(os.path.join(OUTPUT_DIR, 'YB_*.html'))
+
+# 计算下一个研报的编号
+# 规则：已有报告数量 + 1
+# 示例：已有6份报告 → 下一份编号为7 → 生成YB_0007
+next_num = len(existing_reports) + 1
+
+# 生成研报文件名
+# 格式：YB_000{编号}_{时间戳}.html
+# 示例：YB_0007_20260423111711.html
+filename = f"YB_000{next_num}_{timestamp_str}.html"
+
+# 生成完整的文件保存路径
+filepath = os.path.join(OUTPUT_DIR, filename)
+
+# =============================================================================
+# 数据加载
+# =============================================================================
+
+# 从CSV文件读取指数数据
+# 输入：output/index_data.csv
+# 输出：DataFrame对象，包含指数名称、代码、当前点数、数据来源、时间戳等字段
 df_index = pd.read_csv(os.path.join(DATA_DIR, 'index_data.csv'))
+
+# 从CSV文件读取个股数据
+# 输入：output/stock_data.csv
+# 输出：DataFrame对象，包含股票名称、代码、当前价格、数据来源、时间戳等字段
 df_stock = pd.read_csv(os.path.join(DATA_DIR, 'stock_data.csv'))
+
+# 从CSV文件读取ETF数据
+# 输入：output/etf_data.csv
+# 输出：DataFrame对象，包含ETF名称、代码、当前价格、数据来源、时间戳等字段
 df_etf = pd.read_csv(os.path.join(DATA_DIR, 'etf_data.csv'))
 
+# =============================================================================
+# 价格映射构建
+# =============================================================================
+
+# 构建指数价格映射字典
+# 用途：根据指数名称快速查询最新价格，用于后续分析和计算
+# 键：指数名称（如"恒生指数"）
+# 值：当前最新点数（浮点数）
+# 异常处理：跳过无法转换为浮点数的无效数据
 index_price_map = {}
 for _, row in df_index.iterrows():
     try:
@@ -29,6 +139,10 @@ for _, row in df_index.iterrows():
     except (ValueError, TypeError):
         pass
 
+# 构建个股价格映射字典
+# 用途：根据股票代码快速查询最新价格，用于后续分析和计算
+# 键：股票代码（如"00700.HK"）
+# 值：当前最新价格（港币HKD）
 stock_price_map = {}
 for _, row in df_stock.iterrows():
     try:
@@ -36,6 +150,10 @@ for _, row in df_stock.iterrows():
     except (ValueError, TypeError):
         pass
 
+# 构建ETF价格映射字典
+# 用途：根据ETF代码快速查询最新价格，用于后续分析和计算
+# 键：ETF代码（如"02800.HK"）
+# 值：当前最新价格（港币HKD）
 etf_price_map = {}
 for _, row in df_etf.iterrows():
     try:
@@ -43,19 +161,70 @@ for _, row in df_etf.iterrows():
     except (ValueError, TypeError):
         pass
 
-hsi = index_price_map.get('恒生指数', 26163.24)
-hstech = index_price_map.get('恒生科技指数', 4963.94)
-hscei = index_price_map.get('国企指数', 8801.78)
-ndx = index_price_map.get('纳斯达克100指数', 26937.27)
-spx = index_price_map.get('标普500指数', 7137.90)
-dji = index_price_map.get('道琼斯工业指数', 49490.03)
+# =============================================================================
+# 指数当前价格提取
+# =============================================================================
+
+# 从价格映射中提取各指数当前价格
+# 如果映射中不存在该指数，则使用默认值（来源于上一交易日收盘价）
+# 默认值确保即使数据读取失败，报告仍能正常生成
+
+hsi = index_price_map.get('恒生指数', 26163.24)      # 恒生指数
+hstech = index_price_map.get('恒生科技指数', 4963.94) # 恒生科技指数
+hscei = index_price_map.get('国企指数', 8801.78)     # 国企指数
+ndx = index_price_map.get('纳斯达克100指数', 26937.27) # 纳斯达克100指数
+spx = index_price_map.get('标普500指数', 7137.90)     # 标普500指数
+dji = index_price_map.get('道琼斯工业指数', 49490.03) # 道琼斯工业指数
+
+# =============================================================================
+# 辅助计算函数
+# =============================================================================
 
 def calc_rise(current, target):
+    """
+    计算价格上涨百分比
+
+    参数：
+        current (float): 当前价格/点数
+        target (float): 目标价格/点数
+
+    返回：
+        float: 上涨百分比（保留2位小数）
+              计算公式：(目标价格 - 当前价格) / 当前价格 * 100
+
+    示例：
+        calc_rise(100, 110) 返回 10.0（表示上涨10%）
+        calc_rise(100, 90) 返回 -10.0（表示下跌10%）
+    """
     return round((target - current) / current * 100, 2)
+
 
 def calc_fall(current, target):
+    """
+    计算价格下跌百分比
+
+    参数：
+        current (float): 当前价格/点数
+        target (float): 目标价格/点数
+
+    返回：
+        float: 下跌百分比（保留2位小数）
+              计算公式：(目标价格 - 当前价格) / 当前价格 * 100
+              正值表示从当前到目标需要上涨，负值表示从当前到目标会下跌
+
+    示例：
+        calc_fall(100, 90) 返回 -10.0（表示从100跌到90是-10%）
+    """
     return round((target - current) / current * 100, 2)
 
+
+# =============================================================================
+# 指数分析数据定义
+# =============================================================================
+
+# 6大指数的详细分析数据
+# 每个指数包含：名称、代码、当前点位、趋势判断、高/低目标点位、核心逻辑
+# 趋势判断选项：震荡偏弱、震荡偏强、震荡上行
 index_analysis = [
     {"name": "恒生指数", "code": "HSI", "current": hsi, "trend": "震荡偏弱", "high": 28500, "low": 24000,
      "logic": "美伊停火协议到期但特朗普宣布无限期延长，地缘风险暂缓但不确定性仍存。科网股全线回调拖累指数，南向资金逆势净买入48.91亿港元提供底部支撑，市场呈现结构性分化格局。"},
@@ -71,6 +240,13 @@ index_analysis = [
      "logic": "道指反弹0.69%至49490.03点，传统行业盈利改善与油价成本压力对冲，GE Vernova等重磅财报超预期，金融和能源板块提供底部支撑，苹果换帅影响有限。"},
 ]
 
+# =============================================================================
+# 个股分析数据定义
+# =============================================================================
+
+# 港股龙头个股详细分析数据
+# 每个股票包含：名称、代码、当前价格、趋势判断、高/低目标价、观点、仓位建议、核心逻辑
+# 价格来源：从stock_price_map中查询，查询不到则使用默认值
 stock_analysis = [
     {"name": "腾讯控股", "code": "00700.HK", "price": stock_price_map.get("00700.HK", 504.00), "trend": "震荡偏弱", "high": 600, "low": 430, "view": "看多", "position": "加仓，建议仓位占比：8.00%",
      "logic": "AI赋能核心业务提升变现效率，微信AI搜索功能上线，但科网股整体回调短期承压，南向资金净卖出10.28亿港元，估值仍有修复空间。"},
@@ -118,7 +294,7 @@ stock_analysis = [
      "logic": "PD-1海外授权推进，减重药物临床进展积极，创新药管线持续兑现，GLP-1赛道布局具备想象空间。"},
     {"name": "药明生物", "code": "02269.HK", "price": stock_price_map.get("02269.HK", 35.02), "trend": "震荡偏弱", "high": 45, "low": 25, "view": "看空", "position": "减仓，建议仓位占比：-3.00%",
      "logic": "美国生物安全法案影响持续，遭南向资金5日净卖出4.09亿元，海外订单恢复缓慢，地缘政治风险压制估值。"},
-    {"name": "中国海洋石油", "code": "00883.HK", "price": stock_price_map.get("00883.HK", 26.88), "trend": "震荡上行", "high": 34, "low": 22, "view": "看多", "position": "加仓，建议仓位占比：8.00%",
+    {"name": "中国海洋石油", "code": "00883.HK", "price": etf_price_map.get("00883.HK", 26.88), "trend": "震荡上行", "high": 34, "low": 22, "view": "看多", "position": "加仓，建议仓位占比：8.00%",
      "logic": "布伦特原油突破100美元/桶直接受益，获南向资金净买入4.75亿港元居首，桶油成本行业最低，高股息+高盈利弹性双击。"},
     {"name": "中国石油股份", "code": "00857.HK", "price": stock_price_map.get("00857.HK", 10.65), "trend": "震荡上行", "high": 13.5, "low": 8.5, "view": "看多", "position": "加仓，建议仓位占比：7.00%",
      "logic": "油价高位运行利好上游（WTI 92.65美元/桶），天然气业务快速增长，地缘溢价直接受益，估值仍偏低。"},
@@ -150,6 +326,13 @@ stock_analysis = [
      "logic": "AI芯片概念股，智能驾驶赛道长期空间大，但公司仍处亏损期，商业化进度待验证，短期随板块回调。"},
 ]
 
+# =============================================================================
+# ETF分析数据定义
+# =============================================================================
+
+# 港股主要ETF基金详细分析数据
+# 每个ETF包含：名称、代码、当前价格、趋势判断、高/低目标价、观点、仓位建议、核心逻辑
+# 价格来源：从etf_price_map中查询，查询不到则使用默认值
 etf_analysis = [
     {"name": "盈富基金", "code": "02800.HK", "price": etf_price_map.get("02800.HK", 26.76), "trend": "震荡偏弱", "high": 30, "low": 23, "view": "看多", "position": "加仓，建议仓位占比：10.00%",
      "logic": "跟踪恒生指数，获南向资金5日大幅增持32.89亿元居首，港股通持股比例5.46%且持续上升，高股息+低估值配置价值突出。"},
@@ -159,7 +342,27 @@ etf_analysis = [
      "logic": "跟踪国企指数，中字头能源板块受益油价高位，获南向资金5日增持9.02亿元，持股占比单日大增5.05%，资金流入明显。"},
 ]
 
+# =============================================================================
+# HTML表格生成函数
+# =============================================================================
+
 def make_index_data_link(val, source):
+    """
+    生成指数数据来源的超链接
+
+    参数：
+        val (str): 显示文本，通常是数据值或"来源"标签
+        source (str): 数据来源URL
+
+    返回：
+        str: HTML超链接标签字符串
+            - 如果source以"http"开头，返回带超链接的HTML代码
+            - 否则返回原始文本val
+
+    示例：
+        make_index_data_link("来源", "https://example.com")
+        返回: '<a href="https://example.com" target="_blank">来源</a>'
+    """
     try:
         url = str(source)
         if url.startswith('http'):
@@ -168,20 +371,37 @@ def make_index_data_link(val, source):
         pass
     return str(val)
 
-index_table_rows = []
-for _, row in df_index.iterrows():
-    index_table_rows.append(
-        f"<tr><td>{row['指数名称']}</td><td>{row['指数代码']}</td>"
-        f"<td>{make_index_data_link(row['当前最新点数'], row['数据来源'])}</td>"
-        f"<td>{row['当前最新点数对应时间戳']}</td>"
-        f"<td>{make_index_data_link('来源', row['数据来源'])}</td></tr>"
-    )
-index_table_csv = "".join(index_table_rows)
-
-stock_table_csv = df_stock.to_html(index=False, classes="data-table", border=0, escape=False)
-etf_table_csv = df_etf.to_html(index=False, classes="data-table", border=0, escape=False)
 
 def make_index_row(ia):
+    """
+    生成指数分析表格的一行HTML代码
+
+    参数：
+        ia (dict): 指数分析数据字典，包含以下字段：
+            - name: 指数名称
+            - code: 指数代码
+            - current: 当前最新点数
+            - trend: 趋势判断
+            - high: 最高目标点数
+            - low: 最低目标点数
+            - logic: 核心逻辑
+
+    返回：
+        str: HTML表格行<tr>标签，包含9个<td>单元格：
+            1. 指数名称
+            2. 指数代码
+            3. 当前最新点数（千分位格式化）
+            4. 未来一个月趋势预判
+            5. 截止年底最高目标点数（千分位格式化）
+            6. 最高目标点数相对当前涨幅（百分比）
+            7. 截止年底最低目标点数（千分位格式化）
+            8. 最低目标点数相对当前跌幅（百分比）
+            9. 核心逻辑
+
+    计算说明：
+        - high_rise: (high - current) / current * 100，保留2位小数
+        - low_fall: (low - current) / current * 100，保留2位小数
+    """
     high_rise = calc_rise(ia["current"], ia["high"])
     low_fall = calc_fall(ia["current"], ia["low"])
     return f"""<tr>
@@ -191,7 +411,37 @@ def make_index_row(ia):
 <td>{ia['logic']}</td>
 </tr>"""
 
+
 def make_stock_row(sa):
+    """
+    生成个股分析表格的一行HTML代码
+
+    参数：
+        sa (dict): 个股分析数据字典，包含以下字段：
+            - name: 股票名称
+            - code: 股票代码
+            - price: 当前最新价格
+            - trend: 趋势判断
+            - high: 最高目标价
+            - low: 最低目标价
+            - view: 当前看多看空观点
+            - position: 当前仓位调整建议
+            - logic: 核心逻辑
+
+    返回：
+        str: HTML表格行<tr>标签，包含11个<td>单元格：
+            1. 股票名称
+            2. 股票代码
+            3. 当前最新价格（2位小数）
+            4. 未来一个月趋势预判
+            5. 截止年底最高目标价（2位小数）
+            6. 最高目标价相对最新价格涨幅（百分比）
+            7. 截止年底最低目标价（2位小数）
+            8. 最低目标价相对最新价格跌幅（百分比）
+            9. 当前看多看空观点
+            10. 当前仓位调整建议
+            11. 核心逻辑
+    """
     high_rise = calc_rise(sa["price"], sa["high"])
     low_fall = calc_fall(sa["price"], sa["low"])
     return f"""<tr>
@@ -202,7 +452,37 @@ def make_stock_row(sa):
 <td>{sa['logic']}</td>
 </tr>"""
 
+
 def make_etf_row(ea):
+    """
+    生成ETF分析表格的一行HTML代码
+
+    参数：
+        ea (dict): ETF分析数据字典，包含以下字段：
+            - name: ETF名称
+            - code: ETF代码
+            - price: 当前最新价格
+            - trend: 趋势判断
+            - high: 最高目标价
+            - low: 最低目标价
+            - view: 当前看多看空观点
+            - position: 当前仓位调整建议
+            - logic: 核心逻辑
+
+    返回：
+        str: HTML表格行<tr>标签，包含11个<td>单元格：
+            1. ETF名称
+            2. ETF代码
+            3. 当前最新价格（2位小数）
+            4. 未来一个月趋势预判
+            5. 截止年底最高目标价（2位小数）
+            6. 最高目标价相对最新价格涨幅（百分比）
+            7. 截止年底最低目标价（2位小数）
+            8. 最低目标价相对最新价格跌幅（百分比）
+            9. 当前看多看空观点
+            10. 当前仓位调整建议
+            11. 核心逻辑
+    """
     high_rise = calc_rise(ea["price"], ea["high"])
     low_fall = calc_fall(ea["price"], ea["low"])
     return f"""<tr>
@@ -213,9 +493,61 @@ def make_etf_row(ea):
 <td>{ea['logic']}</td>
 </tr>"""
 
+
+# =============================================================================
+# 表格HTML代码生成
+# =============================================================================
+
+# 生成指数数据表格的HTML行
+# 输入：df_index（从index_data.csv读取的DataFrame）
+# 输出：HTML表格行字符串，用于嵌入到研报中
+index_table_rows = []
+for _, row in df_index.iterrows():
+    index_table_rows.append(
+        f"<tr><td>{row['指数名称']}</td><td>{row['指数代码']}</td>"
+        f"<td>{make_index_data_link(row['当前最新点数'], row['数据来源'])}</td>"
+        f"<td>{row['当前最新点数对应时间戳']}</td>"
+        f"<td>{make_index_data_link('来源', row['数据来源'])}</td></tr>"
+    )
+index_table_csv = "".join(index_table_rows)
+
+# 将DataFrame转换为HTML表格
+# 使用pandas的to_html方法，添加CSS类名"data-table"
+# 参数说明：
+#   - index=False: 不显示行索引
+#   - classes="data-table": 添加CSS类名用于样式控制
+#   - border=0: 移除边框（在CSS中自定义
+#   - escape=False: 不转义HTML标签，允许嵌入链接
+stock_table_csv = df_stock.to_html(index=False, classes="data-table", border=0, escape=False)
+etf_table_csv = df_etf.to_html(index=False, classes="data-table", border=0, escape=False)
+
+# =============================================================================
+# 分析表格HTML代码生成
+# =============================================================================
+
+# 使用列表推导式和对应的make_*_row函数生成所有分析表格行
+# 输入：index_analysis、stock_analysis、etf_analysis列表
+# 输出：拼接后的HTML表格行字符串
 index_rows = "".join(make_index_row(ia) for ia in index_analysis)
 stock_rows = "".join(make_stock_row(sa) for sa in stock_analysis)
 etf_rows = "".join(make_etf_row(ea) for ea in etf_analysis)
+
+# =============================================================================
+# 完整HTML研报生成
+# =============================================================================
+
+# 研报HTML模板，包含以下章节：
+# 1. 头部信息（标题、报告日期）
+# 2. 目录
+# 3. 市场数据（指数、个股、ETF数据表）
+# 4. 重大事件分析（近期已发生事件、未来一周预测、重点关注领域）
+# 5. 指数研判
+# 6. 个股分析
+# 7. ETF分析
+# 8. 分析推理过程
+# 9. 参考资料
+# 10. 免责声明
+# 11. 页脚（生成时间、数据来源）
 
 html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -534,7 +866,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 <p>能源板块（中海油、中石油、中石化、紫金矿业、中国神华）：布伦特突破100美元/桶直接受益，南向资金大幅净买入中海油4.75亿港元居首，量价齐升逻辑最清晰。</p>
 <p>AI科技板块（腾讯、百度、中芯国际、华虹半导体）：AI催化持续但内部分化，光通信暴涨带动芯片股情绪，但科网股短期回调提供布局机会。</p>
 <p>新能源板块（宁德时代、比亚迪）：宁德时代超级科技日发布新电池但遭获利回吐跌5.03%，比亚迪海外拓展加速，龙头优势明显但短期承压。</p>
-<p>银行板块（招行、建行、工行、中行）：高股息防御属性突出，获南向资金持续增持（建行5日+21.21亿元、工行+12.24亿元），但净息差收窄限制上行空间。</p>
+<p>银行板块（招行，建行、工行、中行）：高股息防御属性突出，获南向资金持续增持（建行5日+21.21亿元、工行+12.24亿元），但净息差收窄限制上行空间。</p>
 <p>创新药板块（信达生物、药明生物）：分化明显，信达管线兑现+GLP-1催化看多，药明受地缘风险压制遭净卖出4.09亿元看空。</p>
 </div>
 
@@ -622,8 +954,18 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 </body>
 </html>"""
 
+# =============================================================================
+# 文件输出
+# =============================================================================
+
+# 将HTML内容写入文件
+# 输入：完整的HTML字符串html_content
+# 输出：写入到filepath指定的文件
+# 编码：UTF-8，确保中文字符正确显示
 with open(filepath, 'w', encoding='utf-8') as f:
     f.write(html_content)
 
+# 输出生成确认信息到控制台
+# 帮助用户确认报告已成功生成，并显示文件路径和文件名
 print(f"Report generated: {filepath}")
 print(f"Filename: {filename}")
