@@ -19,7 +19,7 @@ CrossMarketStrategy
 ├── prompt.md              # AI Agent report generation prompt (core config)
 ├── config.py              # API credentials (NOT committed to git)
 ├── config_example.py      # Template for API credentials
-├── targets.yaml           # Target instruments config (user-maintained)
+├── targets.json          # Target instruments config (user-maintained)
 ├── fetch_market_data.py   # Market data fetching script
 ├── generate_report.py     # Report generation script
 ├── quality_check.py       # Quality validation script
@@ -38,7 +38,7 @@ CrossMarketStrategy
 
 ## Target Instruments
 
-All target instruments are managed through the `targets.yaml` configuration file, supporting A-shares, Hong Kong stocks, and US stocks. Users can directly edit this file to add or remove instruments.
+All target instruments are managed through the `targets.json` configuration file, supporting A-shares, Hong Kong stocks, and US stocks. Users can directly edit this file to add or remove instruments.
 
 ### Hong Kong Indices (3)
 
@@ -58,19 +58,19 @@ All target instruments are managed through the `targets.yaml` configuration file
 
 ### Hong Kong Stocks
 
-Read from `hk_shares.hkex_stocks` in `targets.yaml`. Currently includes Tencent Holdings, Alibaba, Xiaomi, Kuaishou, JD.com, Meituan, Zijin Mining, SMIC, Hua Hong Semiconductor, Pop Mart, China Shenhua Energy, CATL, Ganfeng Lithium, Kunlun Energy, Sinopec, Guotai Junan International, China Hongqiao, China Merchants Bank, China Construction Bank, Bank of China, HSBC, Innovent Biologics, WuXi Biologics, CNOOC, PetroChina, ICBC, BYD, HKEX, AIA Group, China Life Insurance, Ping An Insurance, China Mobile, NetEase, Baidu, Li Auto, XPeng, ANTA Sports, Horizon Robotics, and more.
+Read from `hk_shares.hkex_stocks` in `targets.json`. Currently includes Tencent Holdings, Alibaba, Xiaomi, Kuaishou, JD.com, Meituan, Zijin Mining, SMIC, Hua Hong Semiconductor, Pop Mart, China Shenhua Energy, CATL, Ganfeng Lithium, Kunlun Energy, Sinopec, Guotai Junan International, China Hongqiao, China Merchants Bank, China Construction Bank, Bank of China, HSBC, Innovent Biologics, WuXi Biologics, CNOOC, PetroChina, ICBC, BYD, HKEX, AIA Group, China Life Insurance, Ping An Insurance, China Mobile, NetEase, Baidu, Li Auto, XPeng, ANTA Sports, Horizon Robotics, and more.
 
 ### US ETFs
 
-Read from `us_shares.etf` in `targets.yaml`. Currently includes Nasdaq 100 ETF (QQQ), S\&P 500 ETF (SPY), and Dow Jones Industrial ETF (DIA).
+Read from `us_shares.etf` in `targets.json`. Currently includes Nasdaq 100 ETF (QQQ), S\&P 500 ETF (SPY), and Dow Jones Industrial ETF (DIA).
 
 ### Hong Kong ETFs
 
-Read from `hk_shares.hkex_etf` in `targets.yaml`. Currently includes Tracker Fund of Hong Kong, CSOP Hang Seng Tech, and Hang Seng H-Share.
+Read from `hk_shares.hkex_etf` in `targets.json`. Currently includes Tracker Fund of Hong Kong, CSOP Hang Seng Tech, and Hang Seng H-Share.
 
 ### A-Share & US Stock Instruments
 
-`targets.yaml` includes pre-defined category structures for A-shares (major indices, sector indices, SSE stocks, SSE ETFs, SZSE stocks, SZSE ETFs) and US stocks (sector indices, stocks, ADRs, ETFs). Users can fill in as needed.
+`targets.json` includes pre-defined category structures for A-shares (major indices, sector indices, SSE stocks, SSE ETFs, SZSE stocks, SZSE ETFs) and US stocks (sector indices, stocks, ADRs, ETFs). Users can fill in as needed.
 
 ## Data Sources
 
