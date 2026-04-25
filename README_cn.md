@@ -24,8 +24,8 @@ MarketForecastingAgent
 ├── generate_report.py     # 研报生成脚本
 ├── quality_check.py       # 质量校验脚本
 ├── debug_timestamp.py     # 时间戳调试脚本
-├── README.md              # 项目说明文档（中文）
-├── README_en.md           # 项目说明文档（英文）
+├── README.md              # 项目说明文档（英文）
+├── README_cn.md          # 项目说明文档（中文）
 ├── .gitignore             # Git 忽略规则
 ├── LICENSE                # AGPL-3.0 许可证
 ├── output/                # 数据文件目录
