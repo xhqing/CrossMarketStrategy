@@ -5,7 +5,7 @@
 文件功能：
     本脚本从Longport（长桥）API获取实时市场数据，包括：
     - 港股指数（上证指数、恒生指数、恒生科技指数、国企指数等）
-    - 港股个股（从targets.yaml配置文件中读取）
+    - 港股个股（从targets.json配置文件中读取）
     - 美股指数（纳斯达克100、标普500、道琼斯工业指数）
 
 =============================================================================
@@ -17,7 +17,7 @@
 
 =============================================================================
 配置依赖：
-    - targets.yaml: 调研标的配置文件
+    - targets.json: 调研标的配置文件
       - hk_shares.index_major: 港股主要指数
       - hk_shares.index_sector: 港股行业指数
       - hk_shares.hkex_stocks: 港股个股
@@ -32,7 +32,7 @@ API依赖：
 =============================================================================
 环境要求：
     - Python 3.7+
-    - 依赖库：pandas, pyyaml, pytz
+    - 依赖库：pandas, pytz
     - config.py中需配置LONGPORT_APP_KEY、LONGPORT_APP_SECRET、LONGPORT_ACCESS_TOKEN
 
 =============================================================================
@@ -47,7 +47,6 @@ import json
 import time
 import logging
 import pandas as pd
-import yaml
 from datetime import datetime
 import pytz
 
@@ -90,7 +89,7 @@ from config import LONGPORT_APP_KEY, LONGPORT_APP_SECRET, LONGPORT_ACCESS_TOKEN
 
 def load_targets_config():
     """
-    加载targets.yaml配置文件
+    加载targets.json配置文件
 
     返回：
         dict: 配置字典，包含以下结构：
@@ -104,7 +103,7 @@ def load_targets_config():
                 - etf: ETF列表
 
     异常处理：
-        - 如果targets.yaml文件不存在，返回默认空配置
+        - 如果targets.json文件不存在，返回默认空配置
         - 使用logger.warning记录警告信息
 
     示例返回：
@@ -115,13 +114,13 @@ def load_targets_config():
             }
         }
     """
-    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'targets.yaml')
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'targets.json')
     if not os.path.exists(config_path):
-        logger.warning(f"targets.yaml not found at {config_path}, using empty config")
+        logger.warning(f"targets.json not found at {config_path}, using empty config")
         return {"hk_shares": {"index_major": [], "index_sector": [], "hkex_stocks": [], "hkex_etf": []}}
 
     with open(config_path, 'r', encoding='utf-8') as f:
-        config = yaml.safe_load(f)
+        config = json.load(f)
     logger.info(f"Loaded targets config from {config_path}")
     return config
 
@@ -152,7 +151,7 @@ def get_indices_from_config(config):
     从配置字典中提取所有指数信息
 
     参数：
-        config (dict): 从targets.yaml加载的配置字典
+        config (dict): 从targets.json加载的配置字典
 
     返回：
         list: 指数信息字典列表，每个字典包含：
@@ -207,7 +206,7 @@ def get_stocks_from_config(config):
     从配置字典中提取所有港股股票信息
 
     参数：
-        config (dict): 从targets.yaml加载的配置字典
+        config (dict): 从targets.json加载的配置字典
 
     返回：
         list: 股票信息字典列表，每个字典包含：
@@ -446,7 +445,7 @@ def main():
     主函数：执行完整的市场数据获取流程
 
     执行步骤：
-        1. 加载targets.yaml配置文件
+        1. 加载targets.json配置文件
         2. 提取指数和股票列表
         3. 创建Longport连接
         4. 遍历获取所有指数数据
