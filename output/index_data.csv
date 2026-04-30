@@ -1,8 +1,7 @@
-指数名称,指数代码,当前最新点数,涨跌幅,当前最新点数对应时间戳,数据来源
-恒生指数,HSI,26111.84,+1.68%,2026-04-29 16:09:00 (北京时间),https://q.10jqka.com.cn/hk/indexYs/
-恒生科技指数,HSTECH,4910.02,+1.72%,2026-04-29 16:09:00 (北京时间),https://q.10jqka.com.cn/hk/indexYs/
-国企指数,HSCEI,8805.60,+1.86%,2026-04-29 16:09:00 (北京时间),https://q.10jqka.com.cn/hk/indexYs/
-红筹股指数,HSCCI,4441.31,+2.41%,2026-04-29 16:09:00 (北京时间),https://q.10jqka.com.cn/hk/indexYs/
-纳斯达克综合指数,.IXIC,24663.80,-0.90%,2026-04-28 16:00:00 (美东时间),https://m.weibo.cn/detail/5292943910898187
-标普500指数,.SPX,7138.80,-0.49%,2026-04-28 16:00:00 (美东时间),https://m.weibo.cn/detail/5292943910898187
-道琼斯工业指数,.DJI,49141.93,-0.05%,2026-04-28 16:00:00 (美东时间),https://m.weibo.cn/detail/5292943910898187
+﻿指数名称,指数代码,当前最新点数,当前最新点数对应时间戳,数据来源
+恒生指数,HSI,26111.83984,2026-04-29 16:00:00 (北京时间),https://cn.stockq.org/index/HSI.php
+恒生科技指数,HSTECH,4910.02002,2026-04-29 16:00:00 (北京时间),https://cn.stockq.org/index/HSTECH.php
+国企指数,HSCEI,8805.59961,2026-04-29 16:00:00 (北京时间),https://cn.stockq.org/index/HSCEI.php
+纳斯达克100指数,.NDX,27186.9844,2026-04-29 16:00:00 (美东时间),https://finance.yahoo.com/quote/%5ENDX
+标普500指数,.SPX,7135.9502,2026-04-29 16:00:00 (美东时间),https://finance.yahoo.com/quote/%5ESPX
+道琼斯工业指数,.DJI,48861.8086,2026-04-29 16:00:00 (美东时间),https://finance.yahoo.com/quote/%5EDJI

@@ -344,9 +344,9 @@ def format_trend_probs(probs):
     return "<br>".join(parts)
 
 
-def make_index_text(ia):
+def make_index_row(ia):
     """
-    生成指数分析的文字描述（不含表格）
+    生成指数分析表格的一行HTML代码
 
     参数：
         ia (dict): 指数分析数据字典，包含以下字段：
@@ -355,35 +355,38 @@ def make_index_text(ia):
             - current: 当前最新点数
             - trend: 趋势判断
             - trend_probs: 趋势概率分布
-            - trend_reasons: 趋势情景理由
             - high: 最高目标点数
             - low: 最低目标点数
             - logic: 核心逻辑
 
     返回：
-        str: HTML格式的指数文字描述
+        str: HTML表格行<tr>标签，包含9个<td>单元格：
+            1. 指数名称
+            2. 指数代码
+            3. 当前最新点数（千分位格式化）
+            4. 未来半年趋势预判（含概率分布）
+            5. 截止年底最高目标点数（千分位格式化）
+            6. 最高目标点数相对当前涨幅（百分比）
+            7. 截止年底最低目标点数（千分位格式化）
+            8. 最低目标点数相对当前跌幅（百分比）
+            9. 核心逻辑
+
+    计算说明：
+        - high_rise: (high - current) / current * 100，保留2位小数
+        - low_fall: (low - current) / current * 100，保留2位小数
     """
+    high_rise = calc_rise(ia["current"], ia["high"])
+    low_fall = calc_fall(ia["current"], ia["low"])
     probs = ia.get('trend_probs', {})
-    reasons = ia.get('trend_reasons', {})
-    
-    trend_items = []
-    for scenario, prob in probs.items():
-        reason = reasons.get(scenario, "")
-        if reason:
-            trend_items.append(f"<li><strong>{scenario}（{prob}%）</strong>：{reason}</li>")
-        else:
-            trend_items.append(f"<li><strong>{scenario}（{prob}%）</strong></li>")
-    
-    trend_list = "\n".join(trend_items)
-    
-    return f"""
-<div style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #1a237e;">
-<h4 style="color: #1a237e; margin-bottom: 10px;">{ia['name']}（{ia['code']}）| 当前点位：{ia['current']:,.2f}</h4>
-<p style="margin: 8px 0;"><strong>未来半年趋势预判：</strong></p>
-<ul style="margin: 8px 0 8px 25px; padding-left: 0;">{trend_list}</ul>
-<p style="margin: 8px 0;"><strong>核心逻辑：</strong>{ia['logic']}</p>
-</div>
-"""
+    # 按指定顺序显示趋势情景：直接上行->震荡上行->震荡偏强->震荡偏弱->震荡下行->直接下行
+    trend_order = ["直接上行", "震荡上行", "震荡偏强", "震荡偏弱", "震荡下行", "直接下行"]
+    probs_text = "<br>".join([f"{k}（{probs[k]}%）" for k in trend_order if k in probs])
+    return f"""<tr>
+<td>{ia['name']}</td><td>{ia['code']}</td><td>{ia['current']:,.2f}</td>
+<td style="text-align: left;">{probs_text}</td><td>{ia['high']:,.2f}</td><td>{high_rise}%</td>
+<td>{ia['low']:,.2f}</td><td>{low_fall}%</td>
+<td>{ia['logic']}</td>
+</tr>"""
 
 
 def make_stock_row(sa):
@@ -399,7 +402,7 @@ def make_stock_row(sa):
             - trend_probs: 趋势概率分布
             - high: 最高目标价
             - low: 最低目标价
-            - view: 当前看多看空观点
+            - view: 当前多空观点
             - position: 当前仓位调整建议
             - logic: 核心逻辑
 
@@ -413,16 +416,19 @@ def make_stock_row(sa):
             6. 最高目标价相对最新价格涨幅（百分比）
             7. 截止年底最低目标价（2位小数）
             8. 最低目标价相对最新价格跌幅（百分比）
-            9. 当前看多看空观点
+            9. 当前多空观点
             10. 当前仓位调整建议
             11. 核心逻辑
     """
     high_rise = calc_rise(sa["price"], sa["high"])
     low_fall = calc_fall(sa["price"], sa["low"])
-    trend_display = f"{sa['trend']}<br>{format_trend_probs(sa.get('trend_probs'))}"
+    probs = sa.get('trend_probs', {})
+    # 按指定顺序显示趋势情景：直接上行->震荡上行->震荡偏强->震荡偏弱->震荡下行->直接下行
+    trend_order = ["直接上行", "震荡上行", "震荡偏强", "震荡偏弱", "震荡下行", "直接下行"]
+    probs_text = "<br>".join([f"{k}（{probs[k]}%）" for k in trend_order if k in probs])
     return f"""<tr>
 <td>{sa['name']}</td><td>{sa['code']}</td><td>{sa['price']:.2f}</td>
-<td>{trend_display}</td><td>{sa['high']:.2f}</td><td>{high_rise}%</td>
+<td style="text-align: left;">{probs_text}</td><td>{sa['high']:.2f}</td><td>{high_rise}%</td>
 <td>{sa['low']:.2f}</td><td>{low_fall}%</td>
 <td>{sa['view']}</td><td>{sa['position']}</td>
 <td>{sa['logic']}</td>
@@ -442,7 +448,7 @@ def make_etf_row(ea):
             - trend_probs: 趋势概率分布
             - high: 最高目标价
             - low: 最低目标价
-            - view: 当前看多看空观点
+            - view: 当前多空观点
             - position: 当前仓位调整建议
             - logic: 核心逻辑
 
@@ -456,16 +462,19 @@ def make_etf_row(ea):
             6. 最高目标价相对最新价格涨幅（百分比）
             7. 截止年底最低目标价（2位小数）
             8. 最低目标价相对最新价格跌幅（百分比）
-            9. 当前看多看空观点
+            9. 当前多空观点
             10. 当前仓位调整建议
             11. 核心逻辑
     """
     high_rise = calc_rise(ea["price"], ea["high"])
     low_fall = calc_fall(ea["price"], ea["low"])
-    trend_display = f"{ea['trend']}<br>{format_trend_probs(ea.get('trend_probs'))}"
+    probs = ea.get('trend_probs', {})
+    # 按指定顺序显示趋势情景：直接上行->震荡上行->震荡偏强->震荡偏弱->震荡下行->直接下行
+    trend_order = ["直接上行", "震荡上行", "震荡偏强", "震荡偏弱", "震荡下行", "直接下行"]
+    probs_text = "<br>".join([f"{k}（{probs[k]}%）" for k in trend_order if k in probs])
     return f"""<tr>
 <td>{ea['name']}</td><td>{ea['code']}</td><td>{ea['price']:.2f}</td>
-<td>{trend_display}</td><td>{ea['high']:.2f}</td><td>{high_rise}%</td>
+<td style="text-align: left;">{probs_text}</td><td>{ea['high']:.2f}</td><td>{high_rise}%</td>
 <td>{ea['low']:.2f}</td><td>{low_fall}%</td>
 <td>{ea['view']}</td><td>{ea['position']}</td>
 <td>{ea['logic']}</td>
@@ -540,8 +549,9 @@ etf_table_csv = "".join(etf_table_rows)
 # 使用列表推导式和对应的make_*_row函数生成所有分析表格行
 # 输入：index_analysis、stock_analysis、etf_analysis列表
 # 输出：拼接后的HTML表格行字符串
-index_texts = "".join(make_index_text(ia) for ia in index_analysis)
+index_rows = "".join(make_index_row(ia) for ia in index_analysis)
 stock_rows = "".join(make_stock_row(sa) for sa in stock_analysis)
+etf_rows = "".join(make_etf_row(ea) for ea in etf_analysis)
 
 # =============================================================================
 # 完整HTML研报生成
@@ -626,8 +636,9 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 <li><a href="#section2">一、未来一周重大事件分析</a>
 </li>
 <li><a href="#section3">二、指数研判</a></li>
-<li><a href="#section4">三、个股分析</a></li>
-<li><a href="#section6">四、分析推理过程</a></li>
+<li><a href="#section5">三、ETF分析</a></li>
+<li><a href="#section4">四、个股分析</a></li>
+<li><a href="#section6">五、分析推理过程</a></li>
 <li><a href="#section7">六、参考资料</a></li>
 </ul>
 </div>
@@ -687,19 +698,52 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 
 <div class="section" id="section3">
 <h2>二、指数研判</h2>
-{index_texts}
+
+<table class="data-table">
+<thead>
+<tr>
+<th>指数名称</th><th>指数代码</th><th>当前最新点数</th>
+<th>未来半年趋势预判</th>
+<th>截止今年12月31日最高目标点数</th><th>最高目标点数相对当前涨幅</th>
+<th>截止今年12月31日最低目标点数</th><th>最低目标点数相对当前跌幅</th>
+<th>未来半年趋势预判的核心逻辑</th>
+</tr>
+</thead>
+<tbody>
+{index_rows}
+</tbody>
+</table>
+</div>
+
+<div class="section" id="section5">
+<h2>三、ETF分析</h2>
+
+<table class="data-table">
+<thead>
+<tr>
+<th>ETF名称</th><th>ETF代码</th><th>当前最新价格(HKD)</th>
+<th>未来半年趋势预判</th><th>截止今年12月31日最高目标价(HKD)</th><th>最高目标价相对最新价格涨幅</th>
+<th>截止今年12月31日最低目标价(HKD)</th><th>最低目标价相对最新价格跌幅</th>
+<th>当前多空观点</th><th>当前仓位调整建议</th>
+<th>未来半年趋势预判的核心逻辑</th>
+</tr>
+</thead>
+<tbody>
+{etf_rows}
+</tbody>
+</table>
 </div>
 
 <div class="section" id="section4">
-<h2>个股分析</h2>
+<h2>四、个股分析</h2>
 
 <table class="data-table">
 <thead>
 <tr>
 <th>股票名称</th><th>股票代码</th><th>当前最新价格(HKD)</th>
-<th>未来半年趋势预判</th><th>截止2026年12月31日最高目标价</th><th>最高目标价相对最新价格涨幅</th>
-<th>截止2026年12月31日最低目标价</th><th>最低目标价相对最新价格跌幅</th>
-<th>当前看多看空观点</th><th>当前仓位调整建议</th>
+<th>未来半年趋势预判</th><th>截止今年12月31日最高目标价(HKD)</th><th>最高目标价相对最新价格涨幅</th>
+<th>截止今年12月31日最低目标价(HKD)</th><th>最低目标价相对最新价格跌幅</th>
+<th>当前多空观点</th><th>当前仓位调整建议</th>
 <th>未来半年趋势预判的核心逻辑</th>
 </tr>
 </thead>
@@ -710,7 +754,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 </div>
 
 <div class="section" id="section6">
-<h2>六、分析推理过程</h2>
+<h2>五、分析推理过程</h2>
 
 <div class="reasoning-chain">
 <h4>1. 宏观判断链</h4>
