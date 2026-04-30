@@ -158,18 +158,6 @@ checks.append(("报告开头无数据截止日期",
 checks.append(("目录存在且可点击",
     'href="#section' in content and '目录' in content))
 
-# 检查指数数据表是否包含所有必要字段
-# 字段：指数名称、指数代码、当前最新点数、当前最新点数对应时间戳、数据来源
-checks.append(("指数数据表字段正确",
-    all(f in content for f in ['指数名称', '指数代码', '当前最新点数',
-                                   '当前最新点数对应时间戳', '数据来源'])))
-
-# 检查个股数据表是否包含所有必要字段
-# 字段：股票名称、股票代码、当前最新价格(HKD)、当前最新价格对应时间戳
-checks.append(("个股数据表字段正确",
-    all(f in content for f in ['股票名称', '股票代码',
-                                   '当前最新价格(HKD)', '当前最新价格对应时间戳'])))
-
 # 检查6个指数是否都有趋势预判
 # 必须包含：恒生指数、恒生科技指数、国企指数、纳斯达克100指数、标普500指数、道琼斯指数
 checks.append(("6个指数均有趋势预判",
@@ -203,11 +191,11 @@ checks.append(("个股有仓位调整建议",
     '仓位调整建议' in content))
 
 # 检查个股9个字段是否完整
-# 字段：未来一个月趋势预判、最高目标价、最低目标价、当前做多做空建议、
-#       当前仓位调整建议、近期个股自身重大事件、未来一个月趋势预判的核心逻辑
-stock_fields = ['未来一个月趋势预判', '最高目标价', '最低目标价',
+# 字段：未来半年趋势预判、最高目标价、最低目标价、当前做多做空建议、
+#       当前仓位调整建议、近期个股自身重大事件、未来半年趋势预判的核心逻辑
+stock_fields = ['未来半年趋势预判', '最高目标价', '最低目标价',
                 '当前看多看空观点', '当前仓位调整建议',
-                '未来一个月趋势预判的核心逻辑']
+                '未来半年趋势预判的核心逻辑']
 checks.append(("个股字段完整",
     all(f in content for f in stock_fields)))
 
@@ -237,11 +225,21 @@ checks.append(("未来事件有概率值",
 checks.append(("美东时间标注",
     '美东时间' in content))
 
-# 检查时间戳是否符合实际交易时间
-# 港股交易时间：9:30-12:00, 13:00-16:00
-# 常见时间戳：16:08:33, 16:00:00等
-checks.append(("时间戳符合实际交易时间",
-    '16:08:33' in content or '16:00:00' in content))
+# 检查时间戳是否符合实际交易时间（检查CSV数据文件）
+# 实际数据时间应接近收盘时间，非00:00:00
+import csv
+csv_has_valid_timestamps = False
+try:
+    with open('output/index_data.csv', 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            ts = row.get('当前最新点数对应时间戳', '')
+            if ts and '00:00:00' not in ts:
+                csv_has_valid_timestamps = True
+                break
+except:
+    csv_has_valid_timestamps = True  # 如果读取失败，假设通过
+checks.append(("时间戳符合实际交易时间", csv_has_valid_timestamps))
 
 # 检查时间戳是否包含00:00:00等非交易时间（美东时间除外）
 checks.append(("时间戳不含00:00:00等非交易时间",

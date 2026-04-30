@@ -324,6 +324,26 @@ def make_index_data_link(val, source):
     return str(val)
 
 
+def format_trend_probs(probs):
+    """
+    格式化趋势概率分布为HTML显示字符串
+
+    参数：
+        probs (dict): 趋势概率字典，包含6种趋势及其概率值
+
+    返回：
+        str: 格式化的HTML字符串，显示6种趋势及其概率
+    """
+    if not probs:
+        return ""
+    trend_order = ["震荡上行", "震荡偏强", "震荡偏弱", "震荡下行", "直接上行", "直接下行"]
+    parts = []
+    for trend in trend_order:
+        prob = probs.get(trend, 0)
+        parts.append(f"{trend}({prob}%)")
+    return "<br>".join(parts)
+
+
 def make_index_row(ia):
     """
     生成指数分析表格的一行HTML代码
@@ -334,6 +354,7 @@ def make_index_row(ia):
             - code: 指数代码
             - current: 当前最新点数
             - trend: 趋势判断
+            - trend_probs: 趋势概率分布
             - high: 最高目标点数
             - low: 最低目标点数
             - logic: 核心逻辑
@@ -343,7 +364,7 @@ def make_index_row(ia):
             1. 指数名称
             2. 指数代码
             3. 当前最新点数（千分位格式化）
-            4. 未来一个月趋势预判
+            4. 未来半年趋势预判（含概率分布）
             5. 截止年底最高目标点数（千分位格式化）
             6. 最高目标点数相对当前涨幅（百分比）
             7. 截止年底最低目标点数（千分位格式化）
@@ -356,9 +377,10 @@ def make_index_row(ia):
     """
     high_rise = calc_rise(ia["current"], ia["high"])
     low_fall = calc_fall(ia["current"], ia["low"])
+    trend_display = f"{ia['trend']}<br>{format_trend_probs(ia.get('trend_probs'))}"
     return f"""<tr>
 <td>{ia['name']}</td><td>{ia['code']}</td><td>{ia['current']:,.2f}</td>
-<td>{ia['trend']}</td><td>{ia['high']:,.2f}</td><td>{high_rise}%</td>
+<td>{trend_display}</td><td>{ia['high']:,.2f}</td><td>{high_rise}%</td>
 <td>{ia['low']:,.2f}</td><td>{low_fall}%</td>
 <td>{ia['logic']}</td>
 </tr>"""
@@ -374,6 +396,7 @@ def make_stock_row(sa):
             - code: 股票代码
             - price: 当前最新价格
             - trend: 趋势判断
+            - trend_probs: 趋势概率分布
             - high: 最高目标价
             - low: 最低目标价
             - view: 当前看多看空观点
@@ -385,7 +408,7 @@ def make_stock_row(sa):
             1. 股票名称
             2. 股票代码
             3. 当前最新价格（2位小数）
-            4. 未来一个月趋势预判
+            4. 未来半年趋势预判（含概率分布）
             5. 截止年底最高目标价（2位小数）
             6. 最高目标价相对最新价格涨幅（百分比）
             7. 截止年底最低目标价（2位小数）
@@ -396,9 +419,10 @@ def make_stock_row(sa):
     """
     high_rise = calc_rise(sa["price"], sa["high"])
     low_fall = calc_fall(sa["price"], sa["low"])
+    trend_display = f"{sa['trend']}<br>{format_trend_probs(sa.get('trend_probs'))}"
     return f"""<tr>
 <td>{sa['name']}</td><td>{sa['code']}</td><td>{sa['price']:.2f}</td>
-<td>{sa['trend']}</td><td>{sa['high']:.2f}</td><td>{high_rise}%</td>
+<td>{trend_display}</td><td>{sa['high']:.2f}</td><td>{high_rise}%</td>
 <td>{sa['low']:.2f}</td><td>{low_fall}%</td>
 <td>{sa['view']}</td><td>{sa['position']}</td>
 <td>{sa['logic']}</td>
@@ -415,6 +439,7 @@ def make_etf_row(ea):
             - code: ETF代码
             - price: 当前最新价格
             - trend: 趋势判断
+            - trend_probs: 趋势概率分布
             - high: 最高目标价
             - low: 最低目标价
             - view: 当前看多看空观点
@@ -426,7 +451,7 @@ def make_etf_row(ea):
             1. ETF名称
             2. ETF代码
             3. 当前最新价格（2位小数）
-            4. 未来一个月趋势预判
+            4. 未来半年趋势预判（含概率分布）
             5. 截止年底最高目标价（2位小数）
             6. 最高目标价相对最新价格涨幅（百分比）
             7. 截止年底最低目标价（2位小数）
@@ -437,9 +462,10 @@ def make_etf_row(ea):
     """
     high_rise = calc_rise(ea["price"], ea["high"])
     low_fall = calc_fall(ea["price"], ea["low"])
+    trend_display = f"{ea['trend']}<br>{format_trend_probs(ea.get('trend_probs'))}"
     return f"""<tr>
 <td>{ea['name']}</td><td>{ea['code']}</td><td>{ea['price']:.2f}</td>
-<td>{ea['trend']}</td><td>{ea['high']:.2f}</td><td>{high_rise}%</td>
+<td>{trend_display}</td><td>{ea['high']:.2f}</td><td>{high_rise}%</td>
 <td>{ea['low']:.2f}</td><td>{low_fall}%</td>
 <td>{ea['view']}</td><td>{ea['position']}</td>
 <td>{ea['logic']}</td>
@@ -463,15 +489,49 @@ for _, row in df_index.iterrows():
     )
 index_table_csv = "".join(index_table_rows)
 
-# 将DataFrame转换为HTML表格
-# 使用pandas的to_html方法，添加CSS类名"data-table"
-# 参数说明：
-#   - index=False: 不显示行索引
-#   - classes="data-table": 添加CSS类名用于样式控制
-#   - border=0: 移除边框（在CSS中自定义
-#   - escape=False: 不转义HTML标签，允许嵌入链接
-stock_table_csv = df_stock.to_html(index=False, classes="data-table", border=0, escape=False)
-etf_table_csv = df_etf.to_html(index=False, classes="data-table", border=0, escape=False)
+# 生成个股数据表格的HTML行（手动生成以支持链接）
+# 输入：df_stock（从stock_data.csv读取的DataFrame）
+# 输出：HTML表格字符串，数据来源列包含可点击链接
+stock_table_rows = []
+stock_table_rows.append("""<table class="data-table">
+<thead>
+<tr>
+<th>股票名称</th><th>股票代码</th><th>当前最新价格(HKD)</th><th>当前最新价格对应时间戳</th><th>数据来源</th>
+</tr>
+</thead>
+<tbody>""")
+for _, row in df_stock.iterrows():
+    source_link = make_index_data_link('来源', row['数据来源'])
+    stock_table_rows.append(
+        f"<tr><td>{row['股票名称']}</td><td>{row['股票代码']}</td>"
+        f"<td>{row['当前最新价格(HKD)']}</td>"
+        f"<td>{row['当前最新价格对应时间戳']}</td>"
+        f"<td>{source_link}</td></tr>"
+    )
+stock_table_rows.append("</tbody></table>")
+stock_table_csv = "".join(stock_table_rows)
+
+# 生成ETF数据表格的HTML行（手动生成以支持链接）
+# 输入：df_etf（从etf_data.csv读取的DataFrame）
+# 输出：HTML表格字符串，数据来源列包含可点击链接
+etf_table_rows = []
+etf_table_rows.append("""<table class="data-table">
+<thead>
+<tr>
+<th>ETF名称</th><th>ETF代码</th><th>当前最新价格(HKD)</th><th>当前最新价格对应时间戳</th><th>数据来源</th>
+</tr>
+</thead>
+<tbody>""")
+for _, row in df_etf.iterrows():
+    source_link = make_index_data_link('来源', row['数据来源'])
+    etf_table_rows.append(
+        f"<tr><td>{row['ETF名称']}</td><td>{row['ETF代码']}</td>"
+        f"<td>{row['当前最新价格(HKD)']}</td>"
+        f"<td>{row['当前最新价格对应时间戳']}</td>"
+        f"<td>{source_link}</td></tr>"
+    )
+etf_table_rows.append("</tbody></table>")
+etf_table_csv = "".join(etf_table_rows)
 
 # =============================================================================
 # 分析表格HTML代码生成
@@ -564,110 +624,17 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 <div class="toc">
 <h2>目录</h2>
 <ul>
-<li><a href="#section1">一、市场数据</a>
-<ul class="sub">
-<li><a href="#section1-1">1.1 指数数据表</a></li>
-<li><a href="#section1-2">1.2 个股数据表</a></li>
-<li><a href="#section1-3">1.3 ETF数据表</a></li>
-</ul>
+<li><a href="#section2">一、未来一周重大事件分析</a>
 </li>
-<li><a href="#section2">二、重大事件分析</a>
-<ul class="sub">
-<li><a href="#section2-1">2.1 近期已发生的重大事件</a></li>
-<li><a href="#section2-2">2.2 未来一周将要发生的重大事件</a></li>
-<li><a href="#section2-3">2.3 重点关注领域</a></li>
+<li><a href="#section3">二、指数研判</a></li>
+<li><a href="#section4">三、个股分析</a></li>
+<li><a href="#section6">四、分析推理过程</a></li>
+<li><a href="#section7">六、参考资料</a></li>
 </ul>
-</li>
-<li><a href="#section3">三、指数研判</a></li>
-<li><a href="#section4">四、个股分析</a></li>
-<li><a href="#section5">五、ETF分析</a></li>
-<li><a href="#section6">六、分析推理过程</a></li>
-<li><a href="#section7">七、参考资料</a></li>
-</ul>
-</div>
-
-<div class="section" id="section1">
-<h2>一、市场数据</h2>
-
-<h3 id="section1-1">1.1 指数数据表</h3>
-<table class="data-table">
-<thead>
-<tr>
-<th>指数名称</th><th>指数代码</th><th>当前最新点数</th><th>当前最新点数对应时间戳</th><th>数据来源</th>
-</tr>
-</thead>
-<tbody>
-{index_table_csv}
-</tbody>
-</table>
-
-<h3 id="section1-2">1.2 个股数据表</h3>
-{stock_table_csv}
-
-<h3 id="section1-3">1.3 ETF数据表</h3>
-{etf_table_csv}
 </div>
 
 <div class="section" id="section2">
-<h2>二、重大事件分析</h2>
-
-<h3 id="section2-1">2.1 近期已发生的重大事件</h3>
-
-<div class="event-card">
-<h4>1. 宁德时代H股配售391.9亿港元，股价暴跌6.88%</h4>
-<p class="time">发生时间：2026年4月28日（北京时间）</p>
-<p><strong>事件概述：</strong>宁德时代4月28日公告拟配售6238.5万股新H股，配售价628.20港元/股，较4月27日收盘价675.50港元折让约7%，募资约392亿港元。当日股价暴跌6.88%收报629港元，领跌恒指成分股。</p>
-<p><strong>对市场的影响机制：</strong>巨额配售引发市场对港股融资压力的担忧，A股极致分化中"港股抽血+A股抱团"格局加剧。但配售价折让仅7%也显示国际资本对优质标的的认可。</p>
-<p><strong>后续进展预期：</strong>配售完成后宁德时代资金实力增强，有利于海外产能扩张和技术研发，长期利好龙头地位巩固。</p>
-<p><strong>对市场的持续影响评估：</strong>短期市场情绪承压，但大型融资项目利好港交所和券商投行业务，长期看优质公司融资能力是市场活力的体现。</p>
-</div>
-
-<div class="event-card">
-<h4>2. 港股4月28日收跌0.95%，科网股全线回调</h4>
-<p class="time">发生时间：2026年4月28日（北京时间）</p>
-<p><strong>事件概述：</strong>恒生指数收跌0.95%报25679点，恒生科技指数跌2.28%报4827点，恒生国企指数跌1.27%报8644点。科网股普遍回调，小米跌3.79%、阿里跌2.84%、快手跌3.12%、理想汽车跌3.87%、小鹏汽车跌4.05%、宁德时代跌6.88%。但能源+高股息板块逆势走强，中海油涨1.90%、中石油涨1.83%、中国神华涨1.99%、昆仑能源涨2.27%。</p>
-<p><strong>对市场的影响机制：</strong>科网股高位获利回吐叠加宁德时代配售冲击，市场情绪承压。但南向资金持续净买入提供底部支撑，A股中特估行情外溢至港股能源+银行板块。</p>
-<p><strong>后续进展预期：</strong>4月29日MAG7四巨头同日发财报，科技板块方向待明朗。五一节前交投趋于谨慎。</p>
-<p><strong>对市场的持续影响评估：</strong>短期震荡偏弱，但结构性机会仍在——能源+高股息防御配置+AI算力硬件主线。</p>
-</div>
-
-<div class="event-card">
-<h4>3. A股4月28日极致分化：中特估虹吸流动性，个股普跌</h4>
-<p class="time">发生时间：2026年4月28日（北京时间）</p>
-<p><strong>事件概述：</strong>A股延续极致分化行情，上证指数收跌0.19%报4078点，创业板指大跌1.43%报3596点。个股涨跌比1698:3682，超80%个股下跌。上证50、沪深300、中特估指数红盘，半导体、商业航天、AI应用等科技题材全线走低。煤炭、燃气、医药、券商、电力逆势上涨。</p>
-<p><strong>对市场的影响机制：</strong>中特估大盘股抱团虹吸全市场流动性，中小盘股无量下跌、流动性枯竭，形成"权重吸血、小票失血"的极端结构性分化。年报一季报披露接近尾声，无业绩支撑的高位题材股集中爆雷。</p>
-<p><strong>后续进展预期：</strong>五一节前严控仓位，等待抱团瓦解、热点扩散、流动性修复的拐点。</p>
-<p><strong>对市场的持续影响评估：</strong>极致分化行情短期难以缓解，防御+高股息策略占优，需警惕2021年"茅指数、宁组合"抱团崩盘重演。</p>
-</div>
-
-<div class="event-card">
-<h4>4. DeepSeek V4发布引爆国产算力，半导体板块大涨</h4>
-<p class="time">发生时间：2026年4月24日（北京时间）</p>
-<p><strong>事件概述：</strong>4月24日DeepSeek"无预警"发布新一代旗舰大模型DeepSeek-V4并开源，同步推出Pro版（1.6万亿参数）与Flash版（2840亿参数）。最大上下文窗口扩展至100万Token。关键突破：V4已完成华为昇腾平台推理适配，标志着国产芯片部署从实验走向应用里程碑。4月24日华虹半导体大涨超15%，中芯国际大涨10%。</p>
-<p><strong>对市场的影响机制：</strong>DeepSeek V4适配华为昇腾平台被视为摆脱对英伟达依赖的里程碑，国产算力产业链情绪大幅提振。预计下半年昇腾950超节点批量上市后，V4-Pro模型价格将大幅下调。</p>
-<p><strong>后续进展预期：</strong>国产AI算力替代加速，港股半导体板块（中芯国际、华虹半导体）长期受益。</p>
-<p><strong>对市场的持续影响评估：</strong>AI算力需求持续推动半导体板块，但4月28日短期获利回吐，中芯国际跌3.22%、华虹半导体跌1.13%。</p>
-</div>
-
-<div class="event-card">
-<h4>5. 美油突破97美元/桶，伊朗局势持续紧张</h4>
-<p class="time">发生时间：2026年4月28日（北京时间）</p>
-<p><strong>事件概述：</strong>美国原油价格突破97美元/桶。伊朗暂停钢坯、钢板等部分钢铁产品出口至5月30日。伊朗明确拒绝出席4月23日的伊斯兰堡第二轮会谈。霍尔木兹海峡危机持续，伊朗布设水雷封锁海峡并威胁征收通行费。黄金价格波动加剧，现货黄金一度突破4690美元/盎司。</p>
-<p><strong>对市场的影响机制：</strong>地缘风险推升能源市场波动，油价高位直接利好港股能源板块（中海油、中石油），但制造业成本压力加大。黄金高位波动利好紫金矿业等贵金属标的。</p>
-<p><strong>后续进展预期：</strong>若美伊谈判取得进展，油价可能回落至80-90美元/桶；若冲突再度升级，油价可能突破130美元/桶。</p>
-<p><strong>对市场的持续影响评估：</strong>油价高位运行将重塑市场风格，能源+高股息板块持续受益，成长股估值承压。4月28日美股能源板块逆势涨1.65%。</p>
-</div>
-
-<div class="event-card">
-<h4>6. 美股4月28日从历史高位回落，AI股回调</h4>
-<p class="time">发生时间：2026年4月28日（美东时间）</p>
-<p><strong>事件概述：</strong>4月27日标普500与纳斯达克综合指数齐创历史新高（标普500触及7173.91，纳指触及24887.10），4月28日从纪录高位回落。道指微跌0.05%报49141点，标普500跌0.49%报7138点，纳指跌0.90%。AI股回调拖累科技板块，但能源板块逆势涨1.65%。</p>
-<p><strong>对市场的影响机制：</strong>AI股高位获利回吐叠加油价上涨挤压科技股估值，但能源板块受益地缘溢价。超级财报周来临前市场观望情绪浓厚。</p>
-<p><strong>后续进展预期：</strong>4月29日谷歌、微软、亚马逊、Meta同日发财报，AI资本开支指引将决定科技板块方向。</p>
-<p><strong>对市场的持续影响评估：</strong>美股从历史高位回落属于正常技术性调整，若MAG7财报超预期，有望再创新高。</p>
-</div>
-
-<h3 id="section2-2">2.2 未来一周将要发生的重大事件</h3>
+<h2>一、未来一周重大事件分析</h2>
 
 <div class="event-card">
 <h4>1. 美联储4月28-29日议息会议：鲍威尔"最后一舞"</h4>
@@ -719,42 +686,17 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 <p><span class="scenario pessimistic">悲观情景（概率20%）：需求疲软导致涨价不及预期，半导体板块回调</span></p>
 </div>
 
-<h3 id="section2-3">2.3 重点关注领域</h3>
-
-<h4>⭐⭐⭐ 美联储货币政策</h4>
-<div class="event-card">
-<p><strong>最新立场：</strong>4月28-29日议息会议预计维持利率3.5%-3.75%不变（概率100%），本次为鲍威尔任期内最后一次主持FOMC。沃什已被提名为下一任美联储主席，市场关注其政策立场。由于担忧战争推高能源价格，市场已下调对今年降息的预期，6月降息概率仅4.7%-5.1%。</p>
-<p><strong>利率路径预期：</strong>德银预计2026年全年维持利率不变。CME数据显示6月降息概率仅4.7%-5.1%，维持不变概率高达94.4%-95.3%。芝加哥联储主席古尔斯比称若油价长期高企，美联储可能需等到2027年才会降息。</p>
-<p><strong>缩表节奏：</strong>缩表仍在持续但节奏已放缓，市场流动性边际改善但整体仍偏紧。</p>
-</div>
-
-<h4>⭐⭐⭐ 中东地缘政治危机</h4>
-<div class="event-card">
-<p><strong>冲突最新动态：</strong>伊朗明确拒绝出席4月23日的伊斯兰堡第二轮会谈。霍尔木兹海峡危机持续，伊朗布设水雷封锁海峡并威胁征收通行费。国际能源署警告海峡事实上关闭已造成重大能源供应中断。伊朗已暂停钢坯、钢板等部分钢铁产品出口至5月30日。</p>
-<p><strong>对油价影响：</strong>美油突破97美元/桶，4月28日美股能源板块逆势涨1.65%。黄金价格波动加剧，现货黄金一度突破4690美元/盎司。若冲突升级，油价可能突破130美元/桶。</p>
-<p><strong>避险情绪传导：</strong>全球避险情绪有所缓解但未消除，资金从成长向价值轮动趋势仍在，港股能源+高股息板块受益，科网股承压。</p>
-<p><strong>供应链风险：</strong>伊朗暂停部分钢铁产品出口显示冲突影响已从能源传导至工业原材料领域，化肥价格此前已暴涨75%。</p>
-</div>
-
-<h4>⭐⭐⭐ 超级财报周</h4>
-<div class="event-card">
-<p><strong>财报密集披露：</strong>4月29日谷歌、微软、亚马逊、Meta同日发财报，苹果、礼来、伯克希尔哈撒韦等随后跟进。AI资本开支指引将成为市场焦点，决定科技板块方向。</p>
-<p><strong>盈利预期：</strong>4月27日标普500与纳斯达克综合指数齐创历史新高，但4月28日从纪录高位回落，AI股回调拖累科技板块。</p>
-<p><strong>对港股影响：</strong>若MAG7财报超预期，港股科技板块有望反弹；若AI投资增速放缓，港股科技股将面临回调压力。</p>
-</div>
-</div>
-
 <div class="section" id="section3">
-<h2>三、指数研判</h2>
+<h2>二、指数研判</h2>
 
 <table class="data-table">
 <thead>
 <tr>
 <th>指数名称</th><th>指数代码</th><th>当前最新点数</th>
-<th>未来一个月趋势预判</th>
+<th>未来半年趋势预判</th>
 <th>截止2026年12月31日最高目标点数</th><th>最高目标点数相对当前涨幅</th>
 <th>截止2026年12月31日最低目标点数</th><th>最低目标点数相对当前跌幅</th>
-<th>未来一个月趋势预判的核心逻辑</th>
+<th>未来半年趋势预判的核心逻辑</th>
 </tr>
 </thead>
 <tbody>
@@ -764,39 +706,20 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 </div>
 
 <div class="section" id="section4">
-<h2>四、个股分析</h2>
+<h2>个股分析</h2>
 
 <table class="data-table">
 <thead>
 <tr>
 <th>股票名称</th><th>股票代码</th><th>当前最新价格(HKD)</th>
-<th>未来一个月趋势预判</th><th>截止2026年12月31日最高目标价</th><th>最高目标价相对最新价格涨幅</th>
+<th>未来半年趋势预判</th><th>截止2026年12月31日最高目标价</th><th>最高目标价相对最新价格涨幅</th>
 <th>截止2026年12月31日最低目标价</th><th>最低目标价相对最新价格跌幅</th>
 <th>当前看多看空观点</th><th>当前仓位调整建议</th>
-<th>未来一个月趋势预判的核心逻辑</th>
+<th>未来半年趋势预判的核心逻辑</th>
 </tr>
 </thead>
 <tbody>
 {stock_rows}
-</tbody>
-</table>
-</div>
-
-<div class="section" id="section5">
-<h2>五、ETF分析</h2>
-
-<table class="data-table">
-<thead>
-<tr>
-<th>ETF名称</th><th>ETF代码</th><th>当前最新价格(HKD)</th>
-<th>未来一个月趋势预判</th><th>截止2026年12月31日最高目标价</th><th>最高目标价相对最新价格涨幅</th>
-<th>截止2026年12月31日最低目标价</th><th>最低目标价相对最新价格跌幅</th>
-<th>当前看多看空观点</th><th>当前仓位调整建议</th>
-<th>未来一个月趋势预判的核心逻辑</th>
-</tr>
-</thead>
-<tbody>
-{etf_rows}
 </tbody>
 </table>
 </div>
@@ -860,41 +783,41 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 </div>
 
 <div class="section" id="section7">
-<h2>七、参考资料</h2>
+<h2>六、参考资料</h2>
 
 <h3>宏观政策类</h3>
 <ul class="ref-list">
-<li><a href="https://www.cbsnews.com/news/fed-rate-decision-april-2026-powell-final-meeting/" target="_blank">美联储4月议息会议：鲍威尔任内最后一次FOMC</a> — CBS News (cbsnews.com)</li>
-<li><a href="https://www.tradingkey.com/zh-hans/analysis/economic/indicators/261820532-fed-rate-hold-inflation-oil-succession-tradingkey" target="_blank">美联储维持利率不变，通胀与油价压力持续</a> — TradingKey (tradingkey.com)</li>
-<li><a href="http://m.toutiao.com/group/7633726637636469291/" target="_blank">美联储4月维持利率不变概率100%，6月降息概率仅4.7%</a> — 财联社 (toutiao.com)</li>
-<li><a href="https://www.cls.cn/subject/1318" target="_blank">超级央行周：五大央行利率决议前瞻</a> — 财联社 (cls.cn)</li>
+<li><a href="https://www.cbsnews.com/news/fed-rate-decision-april-2026-powell-final-meeting/" target="_blank">美联储4月议息会议：鲍威尔任内最后一次FOMC</a> — CBS News (2026年4月29日)</li>
+<li><a href="https://www.tradingkey.com/zh-hans/analysis/economic/indicators/261820532-fed-rate-hold-inflation-oil-succession-tradingkey" target="_blank">美联储维持利率不变，通胀与油价压力持续</a> — TradingKey (2026年4月29日)</li>
+<li><a href="http://m.toutiao.com/group/7633726637636469291/" target="_blank">美联储4月维持利率不变概率100%，6月降息概率仅4.7%</a> — 财联社 (2026年4月28日)</li>
+<li><a href="https://www.cls.cn/subject/1318" target="_blank">超级央行周：五大央行利率决议前瞻</a> — 财联社 (2026年4月27日)</li>
 </ul>
 
 <h3>地缘政治类</h3>
 <ul class="ref-list">
-<li><a href="https://c.m.163.com/news/a/KRKGS8QB0556FDLH.html" target="_blank">美伊冲突持续：伊朗拒绝出席伊斯兰堡第二轮会谈</a> — 网易新闻 (163.com)</li>
-<li><a href="http://m.toutiao.com/group/7631850397984719360/" target="_blank">霍尔木兹海峡危机：伊朗布设水雷封锁海峡</a> — 今日头条 (toutiao.com)</li>
-<li><a href="http://m.toutiao.com/group/7633434688832471587/" target="_blank">美油突破97美元/桶，能源板块逆势走强</a> — 今日头条 (toutiao.com)</li>
-<li><a href="https://finance.sina.com.cn/2026-04-28/iran-steel-export-ban.shtml" target="_blank">伊朗暂停部分钢铁产品出口至5月30日</a> — 新浪财经 (sina.com.cn)</li>
+<li><a href="https://c.m.163.com/news/a/KRKGS8QB0556FDLH.html" target="_blank">美伊冲突持续：伊朗拒绝出席伊斯兰堡第二轮会谈</a> — 网易新闻 (2026年4月28日)</li>
+<li><a href="http://m.toutiao.com/group/7631850397984719360/" target="_blank">霍尔木兹海峡危机：伊朗布设水雷封锁海峡</a> — 今日头条 (2026年4月27日)</li>
+<li><a href="http://m.toutiao.com/group/7633434688832471587/" target="_blank">美油突破97美元/桶，能源板块逆势走强</a> — 今日头条 (2026年4月28日)</li>
+<li><a href="https://finance.sina.com.cn/2026-04-28/iran-steel-export-ban.shtml" target="_blank">伊朗暂停部分钢铁产品出口至5月30日</a> — 新浪财经 (2026年4月28日)</li>
 </ul>
 
 <h3>行业/公司类</h3>
 <ul class="ref-list">
-<li><a href="https://www.21jingji.com/article/20260428/herald/07e11f62524a50be6a919a47b4622a85.html" target="_blank">宁德时代H股配售391.9亿港元，股价暴跌6.88%</a> — 21经济网 (21jingji.com)</li>
-<li><a href="https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0428/2026042800267.pdf" target="_blank">宁德时代配售公告（港交所官方文件）</a> — 港交所 (hkexnews.hk)</li>
-<li><a href="https://global.chinadaily.com.cn/a/202604/24/WS69eb8141a310d6866eb45737.html" target="_blank">DeepSeek V4发布：1.6万亿参数大模型开源</a> — China Daily (chinadaily.com.cn)</li>
-<li><a href="https://finance.eastmoney.com/a/202604273719980678.html" target="_blank">DeepSeek V4适配华为昇腾平台，国产AI算力里程碑</a> — 东方财富网 (eastmoney.com)</li>
-<li><a href="http://m.toutiao.com/group/7632243504617554447/" target="_blank">全球CPU涨价周期：服务器CPU涨幅10%-20%</a> — 财联社 (toutiao.com)</li>
-<li><a href="https://finance.sina.com.cn/stock/hkstock/hkstocknews/2026-04-28/" target="_blank">港股4月28日收评：恒指跌0.95%，科网股全线回调</a> — 新浪财经 (sina.com.cn)</li>
-<li><a href="http://m.toutiao.com/group/7633829589302641152/" target="_blank">南向资金4月28日持续净买入</a> — 证券时报 (toutiao.com)</li>
+<li><a href="https://www.21jingji.com/article/20260428/herald/07e11f62524a50be6a919a47b4622a85.html" target="_blank">宁德时代H股配售391.9亿港元，股价暴跌6.88%</a> — 21经济网 (2026年4月28日)</li>
+<li><a href="https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0428/2026042800267.pdf" target="_blank">宁德时代配售公告（港交所官方文件）</a> — 港交所 (2026年4月28日)</li>
+<li><a href="https://global.chinadaily.com.cn/a/202604/24/WS69eb8141a310d6866eb45737.html" target="_blank">DeepSeek V4发布：1.6万亿参数大模型开源</a> — China Daily (2026年4月24日)</li>
+<li><a href="https://finance.eastmoney.com/a/202604273719980678.html" target="_blank">DeepSeek V4适配华为昇腾平台，国产AI算力里程碑</a> — 东方财富网 (2026年4月27日)</li>
+<li><a href="http://m.toutiao.com/group/7632243504617554447/" target="_blank">全球CPU涨价周期：服务器CPU涨幅10%-20%</a> — 财联社 (2026年4月26日)</li>
+<li><a href="https://finance.sina.com.cn/stock/hkstock/hkstocknews/2026-04-28/" target="_blank">港股4月28日收评：恒指跌0.95%，科网股全线回调</a> — 新浪财经 (2026年4月28日)</li>
+<li><a href="http://m.toutiao.com/group/7633829589302641152/" target="_blank">南向资金4月28日持续净买入</a> — 证券时报 (2026年4月28日)</li>
 </ul>
 
 <h3>技术分析类</h3>
 <ul class="ref-list">
-<li><a href="https://apnews.com/article/wall-street-stocks-dow-nasdaq-b147717d731d3f7cfaf27a9625715c21" target="_blank">美股4月28日从历史高位回落</a> — AP News (apnews.com)</li>
-<li><a href="https://m.weibo.cn/detail/5292941205570128" target="_blank">美股4月28日收盘数据：道指49141、标普7138</a> — 新浪财经微博 (weibo.cn)</li>
-<li><a href="https://www.stl.news/u-s-stock-market-today-tuesday-april-28-2026/" target="_blank">美股4月28日交易日报：能源板块逆势涨1.65%</a> — STL News (stl.news)</li>
-<li><a href="https://www.investing.com/indices/nq-100-news/2" target="_blank">纳斯达克100指数4月28日收跌1.01%</a> — Investing.com (investing.com)</li>
+<li><a href="https://apnews.com/article/wall-street-stocks-dow-nasdaq-b147717d731d3f7cfaf27a9625715c21" target="_blank">美股4月28日从历史高位回落</a> — AP News (2026年4月28日)</li>
+<li><a href="https://m.weibo.cn/detail/5292941205570128" target="_blank">美股4月28日收盘数据：道指49141、标普7138</a> — 新浪财经微博 (2026年4月28日)</li>
+<li><a href="https://www.stl.news/u-s-stock-market-today-tuesday-april-28-2026/" target="_blank">美股4月28日交易日报：能源板块逆势涨1.65%</a> — STL News (2026年4月28日)</li>
+<li><a href="https://www.investing.com/indices/nq-100-news/2" target="_blank">纳斯达克100指数4月28日收跌1.01%</a> — Investing.com (2026年4月28日)</li>
 </ul>
 </div>
 
